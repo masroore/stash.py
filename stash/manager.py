@@ -23,7 +23,7 @@ class StashManager(object):
         self.__serializer = serializer
 
     def __get_cache_key(self, data):
-        return calcsum(self.__options.algo, data)
+        return calcsum(data, self.__options.algo)
 
     def __encode(self, data):
         data = to_bytes(data)

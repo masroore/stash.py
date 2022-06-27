@@ -13,7 +13,7 @@ except ImportError:
     _murmurhash = None
 
 
-def calcsum(algo: str, payload: str) -> str:
+def calcsum(payload: str, algo: str) -> str:
     if not algo:
         return payload
 
