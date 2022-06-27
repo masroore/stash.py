@@ -37,8 +37,8 @@ from stash.storages.null import NullStorage
 from stash.storages.redis import RedisStorage
 from stash.storages.storage import Storage
 
-__author__: str = "Masroor Ehsan"
 __name__: str = consts.PROJECT
+__author__: str = "Masroor Ehsan"
 __email__: str = "masroore@gmail.com"
 __version__: str = ".".join(map(str, consts.VERSION))
 
