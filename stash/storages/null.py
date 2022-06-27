@@ -11,6 +11,9 @@ class NullStorage(Storage):
     def clear(self):
         pass
 
+    def close(self):
+        pass
+
     def write(self, key: str, content):
         pass
 

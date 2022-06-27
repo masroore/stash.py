@@ -16,6 +16,9 @@ class MemoryStorage(Storage):
     def clear(self):
         self.__dict.clear()
 
+    def close(self):
+        self.clear()
+
     def write(self, key: str, content):
         self.__dict[key] = content
 

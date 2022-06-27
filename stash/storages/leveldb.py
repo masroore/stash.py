@@ -2,6 +2,9 @@ from stash.storages.storage import Storage
 
 
 class LeveldbStorage(Storage):
+    def close(self):
+        pass
+
     def exists(self, key: str) -> bool:
         pass
 

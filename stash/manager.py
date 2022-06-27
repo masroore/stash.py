@@ -41,6 +41,9 @@ class StashManager(object):
     def clear(self):
         return self.__storage.clear()
 
+    def close(self):
+        return self.__storage.close()
+
     def write(self, key: str, content):
         data = self.__encode(content)
         return self.__storage.write(self.__get_cache_key(key), data)

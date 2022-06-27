@@ -40,6 +40,9 @@ class LmdbStorage(Storage):
         with self._env.begin(write=True, db=self._db) as txn:
             txn.drop(self._db, delete=False)
 
+    def close(self):
+        self._env.close()
+
     def write(self, key: str, content):
         key = self.normalize_string(key)
         with self._env.begin(write=True, db=self._db) as txn:

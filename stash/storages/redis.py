@@ -30,6 +30,9 @@ class RedisStorage(Storage):
     def clear(self):
         self.client.flushdb()
 
+    def close(self):
+        self.client.close()
+
     def write(self, key: str, content):
         # item = {"data": Binary(content), "timestamp": datetime.utcnow()}
         self.client.set(key, content)

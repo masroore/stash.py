@@ -20,6 +20,10 @@ class Storage(ABC):
         pass
 
     @abstractmethod
+    def close(self):
+        pass
+
+    @abstractmethod
     def write(self, key: str, content):
         pass
 

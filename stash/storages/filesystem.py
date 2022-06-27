@@ -86,6 +86,9 @@ class FileSystemStorage(Storage):
 
                     self.options.logger.error(traceback.format_exc())
 
+    def close(self):
+        pass
+
     def write(self, key: str, content):
         with open(self.resolve_filepath(key), "wb") as f:
             f.write(content)

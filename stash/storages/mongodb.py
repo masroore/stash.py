@@ -31,6 +31,9 @@ class MongoDbStorage(Storage):
     def clear(self):
         self.cache_items.drop()
 
+    def close(self):
+        self.client.close()
+
     def write(self, key: str, content):
         item = {"data": Binary(content), "timestamp": datetime.utcnow()}
         self.cache_items.update_one({"_id": key}, {"$set": item}, upsert=True)
