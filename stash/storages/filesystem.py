@@ -9,7 +9,7 @@ from stash.storages.storage import Storage
 from stash.utils.nested_path import NestedPathBuilder, walk_files, safe_delete_file
 
 
-class FilesystemStorage(Storage):
+class FileSystemStorage(Storage):
     def __init__(self, options: StashOptions):
         super().__init__(options)
         self.__nested_path_builder = NestedPathBuilder(

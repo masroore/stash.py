@@ -28,9 +28,9 @@ from stash.serializers.serializer import Serializer
 from stash.serializers.simplejson import SimpleJSONSerializer
 from stash.serializers.ujson import UltraJSONSerializer
 from stash.storages.dbm import DbmStorage
-from stash.storages.filesystem import FilesystemStorage
+from stash.storages.filesystem import FileSystemStorage
 from stash.storages.leveldb import LeveldbStorage
-from stash.storages.lm_db import LmdbStorage
+from stash.storages.lmdb import LmdbStorage
 from stash.storages.memory import MemoryStorage
 from stash.storages.mongodb import MongoDbStorage
 from stash.storages.null import NullStorage
@@ -71,7 +71,7 @@ __all__: List[str] = [
     "ZstdCodec",
     # storages
     "Storage",
-    "FilesystemStorage",
+    "FileSystemStorage",
     "LmdbStorage",
     "LeveldbStorage",
     "MemoryStorage",
