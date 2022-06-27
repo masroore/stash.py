@@ -5,7 +5,7 @@ from stash.codecs.codec import Codec
 from stash.options import CacheOptions
 from stash.serializers.default import DefaultSerializer
 from stash.serializers.serializer import Serializer
-from stash.storages import Storage
+from stash.storages.storage import Storage
 from stash.utils.checksum import calcsum
 
 
