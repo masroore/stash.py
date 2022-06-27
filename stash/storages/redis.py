@@ -1,4 +1,7 @@
-from redis import Redis
+try:
+    from redis import Redis
+except ImportError:
+    pass
 
 from stash.options import CacheOptions
 from stash.storages.storage import Storage

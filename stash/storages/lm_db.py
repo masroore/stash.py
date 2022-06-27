@@ -1,4 +1,7 @@
-import lmdb
+try:
+    import lmdb
+except ImportError:
+    pass
 
 from stash.options import CacheOptions
 from stash.storages.storage import Storage

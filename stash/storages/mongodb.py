@@ -1,8 +1,11 @@
 from datetime import datetime
 
-from pymongo import MongoClient
+try:
+    from pymongo import MongoClient
+    from bson import Binary
+except ImportError:
+    pass
 
-from bson import Binary
 from stash.options import CacheOptions
 from stash.storages.storage import Storage
 
