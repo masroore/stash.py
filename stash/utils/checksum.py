@@ -18,15 +18,15 @@ def calcsum(algo: str, payload: str) -> str:
         return payload
 
     algo = algo.strip().lower()
-    if algo == CACHE_ALGO_XXH32:
+    if algo == CHECKSUM_ALGO_XXH32:
         return calc_xxh32(payload)
-    elif algo == CACHE_ALGO_XXH64:
+    elif algo == CHECKSUM_ALGO_XXH64:
         return calc_xxh64(payload)
-    elif algo == CACHE_ALGO_MD5:
+    elif algo == CHECKSUM_ALGO_MD5:
         return calc_md5(payload)
-    elif algo == CACHE_ALGO_SHA1:
+    elif algo == CHECKSUM_ALGO_SHA1:
         return calc_sha1(payload)
-    elif algo == CACHE_ALGO_MURMUR:
+    elif algo == CHECKSUM_ALGO_MURMUR:
         return calc_murmur(payload)
 
 

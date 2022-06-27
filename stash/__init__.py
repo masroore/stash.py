@@ -1,3 +1,6 @@
+from typing import List
+
+import stash.consts
 from stash._helpers import *
 from stash.cache import CacheManager
 from stash.codecs.brotli import BrotliCodec
@@ -34,7 +37,12 @@ from stash.storages.null import NullStorage
 from stash.storages.redis import RedisStorage
 from stash.storages.storage import Storage
 
-__all__ = [
+__author__: str = "Masroor Ehsan"
+__name__: str = consts.PROJECT
+__email__: str = "masroore@gmail.com"
+__version__: str = ".".join(map(str, consts.VERSION))
+
+__all__: List[str] = [
     "CacheManager",
     # serializers
     "Serializer",
