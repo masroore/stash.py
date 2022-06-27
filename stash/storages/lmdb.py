@@ -5,6 +5,7 @@ except ImportError:
 
 from stash.options import StashOptions
 from stash.storages.storage import Storage
+from stash.utils.checksum import to_bytes
 
 
 class LmdbStorage(Storage):
@@ -33,7 +34,7 @@ class LmdbStorage(Storage):
 
     @staticmethod
     def normalize_string(key: str) -> bytes:
-        return key.strip().encode("utf-8")
+        return to_bytes(key.strip())
 
     def clear(self):
         with self._env.begin(write=True, db=self._db) as txn:
