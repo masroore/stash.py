@@ -1,10 +1,10 @@
 from abc import ABC, abstractmethod
 
-from stash.options import CacheOptions
+from stash.options import StashOptions
 
 
 class Storage(ABC):
-    def __init__(self, options: CacheOptions):
+    def __init__(self, options: StashOptions):
         self.options = options
 
     @abstractmethod

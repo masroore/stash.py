@@ -4,13 +4,13 @@ import shutil
 import time
 from stat import S_ISREG
 
-from stash.options import CacheOptions
+from stash.options import StashOptions
 from stash.storages.storage import Storage
 from stash.utils.nested_path import NestedPathBuilder, walk_files, safe_delete_file
 
 
 class FilesystemStorage(Storage):
-    def __init__(self, options: CacheOptions):
+    def __init__(self, options: StashOptions):
         super().__init__(options)
         self.__nested_path_builder = NestedPathBuilder(
             self.options.fs_cache_dir,

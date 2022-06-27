@@ -1,9 +1,9 @@
-from stash.options import CacheOptions
+from stash.options import StashOptions
 from stash.storages.storage import Storage
 
 
 class MemoryStorage(Storage):
-    def __init__(self, options: CacheOptions):
+    def __init__(self, options: StashOptions):
         super().__init__(options)
         self.__dict = {}
 

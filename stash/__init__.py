@@ -2,7 +2,6 @@ from typing import List
 
 import stash.consts
 from stash._helpers import *
-from stash.cache import CacheManager
 from stash.codecs.brotli import BrotliCodec
 from stash.codecs.bzip2 import BZip2Codec
 from stash.codecs.codec import Codec
@@ -16,6 +15,7 @@ from stash.codecs.snappy import SnappyCodec
 from stash.codecs.zlib import ZlibCodec
 from stash.codecs.zopfli import ZopfliCodec
 from stash.codecs.zstd import ZstdCodec
+from stash.manager import StashManager
 from stash.serializers.bson import BSONSerializer
 from stash.serializers.cbor import CBORSerializer
 from stash.serializers.default import DefaultSerializer
@@ -43,7 +43,7 @@ __email__: str = "masroore@gmail.com"
 __version__: str = ".".join(map(str, consts.VERSION))
 
 __all__: List[str] = [
-    "CacheManager",
+    "StashManager",
     # serializers
     "Serializer",
     "DefaultSerializer",

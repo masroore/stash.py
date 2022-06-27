@@ -2,19 +2,19 @@ from __future__ import absolute_import
 
 from stash import defaults
 from stash.codecs.codec import Codec
-from stash.options import CacheOptions
+from stash.options import StashOptions
 from stash.serializers.default import DefaultSerializer
 from stash.serializers.serializer import Serializer
 from stash.storages.storage import Storage
-from stash.utils.checksum import calcsum
+from stash.utils.checksum import calcsum, to_bytes
 
 
-class CacheManager(object):
+class StashManager(object):
     def __init__(
         self,
         storage: Storage,
         codec: Codec,
-        options: CacheOptions,
+        options: StashOptions,
         serializer: Serializer = DefaultSerializer(),
     ):
         self.__storage = storage
@@ -26,7 +26,7 @@ class CacheManager(object):
         return calcsum(self.__options.algo, data)
 
     def __encode(self, data):
-        data = data.encode("utf-8")
+        data = to_bytes(data)
         return self.__codec.encode(data) if self.__codec else data
 
     def __decode(self, data):

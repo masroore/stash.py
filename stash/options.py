@@ -21,7 +21,7 @@ _default = {
 }
 
 
-class CacheOptions(object):
+class StashOptions(object):
     def __init__(self, data=None):
         if data is None:
             data = _default

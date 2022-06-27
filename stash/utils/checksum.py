@@ -30,12 +30,18 @@ def calcsum(algo: str, payload: str) -> str:
         return calc_murmur(payload)
 
 
+def to_bytes(data) -> bytes:
+    if isinstance(data, str):
+        data = data.encode("utf-8")
+    return data
+
+
 def calc_md5(data: str) -> str:
-    return hashlib.md5(data.encode("utf-8")).hexdigest().lower()
+    return hashlib.md5(to_bytes(data)).hexdigest().lower()
 
 
 def calc_sha1(data: str) -> str:
-    return hashlib.sha1(data.encode("utf-8")).hexdigest().lower()
+    return hashlib.sha1(to_bytes(data)).hexdigest().lower()
 
 
 def calc_xxh32(data: str) -> str:

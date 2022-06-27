@@ -1,14 +1,14 @@
-from stash.cache import CacheManager
 from stash.codecs.passthru import PassthruCodec
-from stash.options import CacheOptions
+from stash.manager import StashManager
+from stash.options import StashOptions
 
 
-def _init_cache(storage, codec, options: CacheOptions) -> CacheManager:
-    cache_man = CacheManager(storage=storage, codec=codec, options=options)
+def _init_cache(storage, codec, options: StashOptions) -> StashManager:
+    cache_man = StashManager(storage=storage, codec=codec, options=options)
     return cache_man
 
 
-def _init_fs_cache(codec, options: CacheOptions) -> CacheManager:
+def _init_fs_cache(codec, options: StashOptions) -> StashManager:
     from .storages.filesystem import FilesystemStorage
 
     return _init_cache(
@@ -16,25 +16,25 @@ def _init_fs_cache(codec, options: CacheOptions) -> CacheManager:
     )
 
 
-def get_fs_zl_cache(options: CacheOptions) -> CacheManager:
+def get_fs_zl_stash(options: StashOptions) -> StashManager:
     from .codecs.zlib import ZlibCodec
 
     return _init_fs_cache(ZlibCodec(), options=options)
 
 
-def get_fs_br_cache(options: CacheOptions) -> CacheManager:
+def get_fs_br_stash(options: StashOptions) -> StashManager:
     from .codecs.brotli import BrotliCodec
 
     return _init_fs_cache(BrotliCodec(), options=options)
 
 
-def get_fs_zs_cache(options: CacheOptions) -> CacheManager:
+def get_fs_zs_stash(options: StashOptions) -> StashManager:
     from .codecs.zstd import ZstdCodec
 
     return _init_fs_cache(ZstdCodec(), options=options)
 
 
-def get_mongo_zl_cache(options: CacheOptions) -> CacheManager:
+def get_mongo_zl_stash(options: StashOptions) -> StashManager:
     from .codecs.zlib import ZlibCodec
     from .storages.mongodb import MongoDbStorage
 
@@ -42,7 +42,7 @@ def get_mongo_zl_cache(options: CacheOptions) -> CacheManager:
     return _init_cache(storage, ZlibCodec(), options=options)
 
 
-def get_lmdb_zl_cache(options: CacheOptions) -> CacheManager:
+def get_lmdb_zl_stash(options: StashOptions) -> StashManager:
     from .codecs.zlib import ZlibCodec
     from .storages.lm_db import LmdbStorage
 
@@ -50,7 +50,7 @@ def get_lmdb_zl_cache(options: CacheOptions) -> CacheManager:
     return _init_cache(storage, ZlibCodec(), options=options)
 
 
-def get_lmdb_zs_cache(options: CacheOptions) -> CacheManager:
+def get_lmdb_zs_stash(options: StashOptions) -> StashManager:
     from .codecs.zstd import ZstdCodec
     from .storages.lm_db import LmdbStorage
 
@@ -58,14 +58,14 @@ def get_lmdb_zs_cache(options: CacheOptions) -> CacheManager:
     return _init_cache(storage, ZstdCodec(), options=options)
 
 
-def get_fs_cache(options: CacheOptions) -> CacheManager:
+def get_fs_stash(options: StashOptions) -> StashManager:
     return _init_fs_cache(codec=None, options=options)
 
 
-def get_null_cache() -> CacheManager:
+def get_null_stash() -> StashManager:
     from .storages.null import NullStorage
 
-    options = CacheOptions()
+    options = StashOptions()
     return _init_cache(
         storage=NullStorage(options=options), codec=PassthruCodec(), options=options
     )

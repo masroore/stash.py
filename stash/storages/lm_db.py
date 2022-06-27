@@ -3,12 +3,12 @@ try:
 except ImportError:
     pass
 
-from stash.options import CacheOptions
+from stash.options import StashOptions
 from stash.storages.storage import Storage
 
 
 class LmdbStorage(Storage):
-    def __init__(self, options: CacheOptions):
+    def __init__(self, options: StashOptions):
         super().__init__(options)
         self.__cache_max_age = self.options.cache_max_age
         self._logger = self.options.logger
