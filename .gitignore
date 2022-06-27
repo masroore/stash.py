@@ -51,4 +51,16 @@ coverage.xml
 
 # Sphinx documentation
 docs/_build/
+
+# Editors
+.vscode/
 .idea/
+
+# Vagrant
+.vagrant/
+
+# Mac/OSX
+.DS_Store
+
+# Windows
+Thumbs.db
