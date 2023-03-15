@@ -1,7 +1,10 @@
 import os
 from time import time
 
-from lsm import LSM
+try:
+    from lsm import LSM
+except ImportError:
+    pass
 
 from stash.options import StashOptions
 from stash.storages.storage import Storage
