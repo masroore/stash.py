@@ -13,6 +13,7 @@ _default = {
     "lmdb_map_size": consts.SIZE_MB * 4,
     "lmdb_filename": defaults.CACHE_DEFAULT_FILENAME,
     "dbm_filename": defaults.CACHE_DEFAULT_FILENAME + ".dbm",
+    "lsmdb_filename": defaults.CACHE_DEFAULT_FILENAME + ".ldb",
     "redis_unix_socket_path": None,
     "redis_host": "localhost",
     "redis_port": 6379,

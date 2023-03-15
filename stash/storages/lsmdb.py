@@ -1,15 +1,17 @@
 import os
 from time import time
-import dbm
+
+from lsm import LSM
+
 from stash.options import StashOptions
 from stash.storages.storage import Storage
 
 
-class DbmStorage(Storage):
+class LsmDbStorage(Storage):
     def __init__(self, options: StashOptions):
         super().__init__(options)
-        dbpath = os.path.join(self.options.fs_cache_dir, options.dbm_filename)
-        self.__db = dbm.open(dbpath, "c")
+        dbpath = os.path.join(self.options.fs_cache_dir, options.lsmdb_filename)
+        self.__db = LSM(dbpath)
 
     def _data_key(self, key: str) -> str:
         return f"{key.strip()}^@d"
@@ -25,7 +27,8 @@ class DbmStorage(Storage):
         pass
 
     def clear(self):
-        self.__db.clear()
+        for k in self.__db.keys():
+            del self.__db[k]
 
     def close(self):
         self.__db.close()
@@ -35,7 +38,7 @@ class DbmStorage(Storage):
         self.__db[self._meta_key(key)] = str(time())
 
     def read(self, key: str):
-        return self.__db.get(self._data_key(key))
+        return self.__db[self._data_key(key)]
 
     def rm(self, key: str):
-        self.__db.pop(key)
+        del self.__db[self._data_key(key)]

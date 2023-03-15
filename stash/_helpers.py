@@ -93,3 +93,27 @@ def get_dbm_stash(options: StashOptions) -> StashManager:
 
     storage = DbmStorage(options=options)
     return _init_cache(storage, codec=PassthruCodec(), options=options)
+
+
+def get_lsmdb_zstd_stash(options: StashOptions) -> StashManager:
+    from .codecs.zstd import ZstdCodec
+    from .storages.lsmdb import LsmDbStorage
+
+    storage = LsmDbStorage(options=options)
+    return _init_cache(storage, ZstdCodec(), options=options)
+
+
+def get_lsmdb_zlib_stash(options: StashOptions) -> StashManager:
+    from .codecs.zlib import ZlibCodec
+    from .storages.lsmdb import LsmDbStorage
+
+    storage = LsmDbStorage(options=options)
+    return _init_cache(storage, ZlibCodec(), options=options)
+
+
+def get_lsmdb_stash(options: StashOptions) -> StashManager:
+    from .storages.lsmdb import LsmDbStorage
+    from .codecs.passthru import PassthruCodec
+
+    storage = LsmDbStorage(options=options)
+    return _init_cache(storage, codec=PassthruCodec(), options=options)

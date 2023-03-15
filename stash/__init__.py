@@ -31,6 +31,7 @@ from stash.storages.dbm_ import DbmStorage
 from stash.storages.filesystem import FileSystemStorage
 from stash.storages.leveldb import LeveldbStorage
 from stash.storages.lmdb import LmdbStorage
+from stash.storages.lsmdb import LsmDbStorage
 from stash.storages.memory import MemoryStorage
 from stash.storages.mongodb import MongoDbStorage
 from stash.storages.null import NullStorage
@@ -75,6 +76,7 @@ __all__: List[str] = [
     "FileSystemStorage",
     "LmdbStorage",
     "LeveldbStorage",
+    "LsmDbStorage",
     "MemoryStorage",
     "NullStorage",
     "MongoDbStorage",
