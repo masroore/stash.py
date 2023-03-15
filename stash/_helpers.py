@@ -73,7 +73,7 @@ def get_null_stash() -> StashManager:
 
 def get_dbm_zstd_stash(options: StashOptions) -> StashManager:
     from .codecs.zstd import ZstdCodec
-    from .storages.dbm import DbmStorage
+    from .storages.dbm_ import DbmStorage
 
     storage = DbmStorage(options=options)
     return _init_cache(storage, ZstdCodec(), options=options)
@@ -81,14 +81,14 @@ def get_dbm_zstd_stash(options: StashOptions) -> StashManager:
 
 def get_dbm_zlib_stash(options: StashOptions) -> StashManager:
     from .codecs.zlib import ZlibCodec
-    from .storages.dbm import DbmStorage
+    from .storages.dbm_ import DbmStorage
 
     storage = DbmStorage(options=options)
     return _init_cache(storage, ZlibCodec(), options=options)
 
 
 def get_dbm_stash(options: StashOptions) -> StashManager:
-    from .storages.dbm import DbmStorage
+    from .storages.dbm_ import DbmStorage
     from .codecs.passthru import PassthruCodec
 
     storage = DbmStorage(options=options)

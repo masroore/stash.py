@@ -27,7 +27,7 @@ from stash.serializers.serializer import Serializer
 from stash.serializers.serializer import Serializer
 from stash.serializers.simplejson import SimpleJSONSerializer
 from stash.serializers.ujson import UltraJSONSerializer
-from stash.storages.dbm import DbmStorage
+from stash.storages.dbm_ import DbmStorage
 from stash.storages.filesystem import FileSystemStorage
 from stash.storages.leveldb import LeveldbStorage
 from stash.storages.lmdb import LmdbStorage
@@ -71,6 +71,7 @@ __all__: List[str] = [
     "ZstdCodec",
     # storages
     "Storage",
+    "DbmStorage",
     "FileSystemStorage",
     "LmdbStorage",
     "LeveldbStorage",
@@ -78,5 +79,4 @@ __all__: List[str] = [
     "NullStorage",
     "MongoDbStorage",
     "RedisStorage",
-    "DbmStorage",
 ]
