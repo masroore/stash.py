@@ -1,3 +1,5 @@
+import functools
+
 from stash.manager import StashManager
 from stash.options import StashOptions
 
@@ -117,3 +119,26 @@ def get_lsmdb_stash(options: StashOptions) -> StashManager:
 
     storage = LsmDbStorage(options=options)
     return _init_cache(storage, codec=PassthruCodec(), options=options)
+
+
+def stash(stash: StashManager = None):
+    stash_ = stash
+
+    def decorator(function):
+        stash = stash_
+        if stash is None:
+            stash = get_fs_stash(StashOptions())
+
+        @functools.wraps(function)
+        def func(*args, **kwargs):
+            key = str(args)
+            if not stash.exists(key):
+                content = function(*args, **kwargs)
+                stash.write(key=key, content=content)
+                return content
+
+            return stash.read(key)
+
+        return func
+
+    return decorator
