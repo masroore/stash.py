@@ -1,7 +1,7 @@
 from typing import Tuple
 
 PROJECT: str = "stash"
-VERSION: Tuple[int, int, int] = (0, 0, 6)
+VERSION: Tuple[int, int, int] = (0, 0, 6, 1)
 
 CHECKSUM_ALGO_MD5 = "md5"
 CHECKSUM_ALGO_SHA1 = "sha1"

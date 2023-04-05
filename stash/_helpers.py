@@ -43,6 +43,22 @@ def get_mongo_zlib_stash(options: StashOptions) -> StashManager:
     return _init_cache(storage, ZlibCodec(), options=options)
 
 
+def get_lmdb_brotli_stash(options: StashOptions) -> StashManager:
+    from .codecs.brotli import BrotliCodec
+    from .storages.lmdb import LmdbStorage
+
+    storage = LmdbStorage(options=options)
+    return _init_cache(storage, BrotliCodec(), options=options)
+
+
+def get_lmdb_stash(options: StashOptions) -> StashManager:
+    from .codecs.passthru import PassthruCodec
+    from .storages.lmdb import LmdbStorage
+
+    storage = LmdbStorage(options=options)
+    return _init_cache(storage, PassthruCodec(), options=options)
+
+
 def get_lmdb_zl_stash(options: StashOptions) -> StashManager:
     from .codecs.zlib import ZlibCodec
     from .storages.lmdb import LmdbStorage
@@ -89,12 +105,28 @@ def get_dbm_zlib_stash(options: StashOptions) -> StashManager:
     return _init_cache(storage, ZlibCodec(), options=options)
 
 
+def get_dbm_brotli_stash(options: StashOptions) -> StashManager:
+    from .codecs.brotli import BrotliCodec
+    from .storages.dbm_ import DbmStorage
+
+    storage = DbmStorage(options=options)
+    return _init_cache(storage, BrotliCodec(), options=options)
+
+
 def get_dbm_stash(options: StashOptions) -> StashManager:
     from .storages.dbm_ import DbmStorage
     from .codecs.passthru import PassthruCodec
 
     storage = DbmStorage(options=options)
     return _init_cache(storage, codec=PassthruCodec(), options=options)
+
+
+def get_lsmdb_brotli_stash(options: StashOptions) -> StashManager:
+    from .codecs.brotli import BrotliCodec
+    from .storages.lsmdb import LsmDbStorage
+
+    storage = LsmDbStorage(options=options)
+    return _init_cache(storage, BrotliCodec(), options=options)
 
 
 def get_lsmdb_zstd_stash(options: StashOptions) -> StashManager:
