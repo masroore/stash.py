@@ -1,7 +1,20 @@
 import functools
 
+from stash.consts import SIZE_KB, SIZE_MB, SIZE_GB
 from stash.manager import StashManager
 from stash.options import StashOptions
+
+
+def size_kb(n: int) -> int:
+    return SIZE_KB * n
+
+
+def size_mb(n: int) -> int:
+    return SIZE_MB * n
+
+
+def size_gb(n: int) -> int:
+    return SIZE_GB * n
 
 
 def _init_cache(storage, codec, options: StashOptions) -> StashManager:
@@ -180,6 +193,14 @@ def get_lsmdb_stash(options: StashOptions) -> StashManager:
     from .codecs.passthru import PassthruCodec
 
     storage = LsmDbStorage(options=options)
+    return _init_cache(storage, codec=PassthruCodec(), options=options)
+
+
+def get_leveldb_stash(options: StashOptions) -> StashManager:
+    from .storages.leveldb import LeveldbStorage
+    from .codecs.passthru import PassthruCodec
+
+    storage = LeveldbStorage(options=options)
     return _init_cache(storage, codec=PassthruCodec(), options=options)
 
 
