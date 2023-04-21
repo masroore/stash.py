@@ -81,5 +81,5 @@ __all__: List[str] = [
     "NullStorage",
     "MongoDbStorage",
     "RedisStorage",
-    "stash",
+    "stashify",
 ]

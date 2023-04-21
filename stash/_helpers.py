@@ -204,7 +204,39 @@ def get_leveldb_stash(options: StashOptions) -> StashManager:
     return _init_cache(storage, codec=PassthruCodec(), options=options)
 
 
-def stash(stash: StashManager = None):
+def get_leveldb_brotli_stash(options: StashOptions) -> StashManager:
+    from .codecs.brotli import BrotliCodec
+    from .storages.leveldb import LeveldbStorage
+
+    storage = LeveldbStorage(options=options)
+    return _init_cache(storage, BrotliCodec(), options=options)
+
+
+def get_leveldb_zstd_stash(options: StashOptions) -> StashManager:
+    from .codecs.zstd import ZstdCodec
+    from .storages.leveldb import LeveldbStorage
+
+    storage = LeveldbStorage(options=options)
+    return _init_cache(storage, ZstdCodec(), options=options)
+
+
+def get_leveldb_lzma_stash(options: StashOptions) -> StashManager:
+    from .codecs.lzma import LzmaCodec
+    from .storages.leveldb import LeveldbStorage
+
+    storage = LeveldbStorage(options=options)
+    return _init_cache(storage, LzmaCodec(), options=options)
+
+
+def get_leveldb_zlib_stash(options: StashOptions) -> StashManager:
+    from .codecs.zlib import ZlibCodec
+    from .storages.leveldb import LeveldbStorage
+
+    storage = LeveldbStorage(options=options)
+    return _init_cache(storage, ZlibCodec(), options=options)
+
+
+def stashify(stash: StashManager = None):
     stash_ = stash
 
     def decorator(function):
