@@ -18,7 +18,7 @@ class LeveldbStorage(Storage):
         super().__init__(options)
         self._cache_max_age = self.options.cache_max_age
         self._logger = self.options.logger
-        dbpath = os.path.join(self.options.fs_cache_dir, options.dbm_filename)
+        dbpath = os.path.join(self.options.fs_cache_dir, options.leveldb_filename)
         self._db: LevelDB | None = LevelDB(path=dbpath, create_if_missing=True)
 
     @staticmethod
