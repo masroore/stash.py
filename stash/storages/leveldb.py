@@ -18,8 +18,14 @@ class LeveldbStorage(Storage):
         super().__init__(options)
         self._cache_max_age = self.options.cache_max_age
         self._logger = self.options.logger
-        dbpath = os.path.join(self.options.fs_cache_dir, options.leveldb_filename)
-        self._db: LevelDB | None = LevelDB(path=dbpath, create_if_missing=True)
+        leveldb_path = os.path.abspath(self.options.fs_cache_dir)
+        self._db: LevelDB | None = LevelDB(
+            path=leveldb_path,
+            create_if_missing=True,
+            block_size=options.leveldb_block_size,
+            lru_cache_size=options.leveldb_lru_cache_size,
+            write_buffer_size=options.leveldb_write_buffer_size,
+        )
 
     @staticmethod
     def _encode_str(s: str) -> bytes:
