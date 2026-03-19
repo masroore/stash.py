@@ -37,10 +37,10 @@ from stash.storages.null import NullStorage
 from stash.storages.redis import RedisStorage
 from stash.storages.storage import Storage
 
-__title__: str = consts.PROJECT
+__title__: str = stash.consts.PROJECT
 __author__: str = "Masroor Ehsan"
 __email__: str = "masroore@gmail.com"
-__version__: str = ".".join(map(str, consts.VERSION))
+__version__: str = ".".join(map(str, stash.consts.VERSION))
 
 __all__: List[str] = [
     "StashManager",
