@@ -1,0 +1,91 @@
+[build-system]
+requires = ["setuptools>=69", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "stashlib"
+description = "stash is an extensible and lightweight cache library for python"
+readme = "README.md"
+requires-python = ">=3.10"
+license = "MIT"
+authors = [
+    { name = "Masroor Ehsan", email = "masroore@gmail.com" },
+]
+keywords = ["cache", "caching"]
+classifiers = [
+    "Development Status :: 4 - Beta",
+    "Environment :: Other Environment",
+    "Intended Audience :: Developers",
+    "Operating System :: OS Independent",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
+    "Topic :: Software Development :: Libraries :: Python Modules",
+]
+dynamic = ["version"]
+
+[project.urls]
+Homepage = "https://github.com/masroore/stash.py"
+Repository = "https://github.com/masroore/stash.py"
+
+[project.optional-dependencies]
+brotli = ["brotli>=1.1"]
+lz4 = ["lz4>=4.3"]
+lzf = ["python-lzf>=0.2.6"]
+lzo = ["python-lzo>=1.15"]
+snappy = ["python-snappy>=0.7"]
+zopfli = ["zopfli>=0.2.3"]
+zstd = ["zstd>=1.5"]
+
+bson = ["pymongo>=4.6"]
+cbor = ["cbor2>=5.6"]
+msgpack = ["msgpack>=1.0"]
+orjson = ["orjson>=3.10"]
+rapidjson = ["python-rapidjson>=1.18"]
+simplejson = ["simplejson>=3.19"]
+ujson = ["ujson>=5.10"]
+
+lmdb = ["lmdb>=1.4"]
+leveldb = ["leveldb>=0.201"]
+lsmdb = ["lsm>=0.5"]
+mongodb = ["pymongo>=4.6"]
+redis = ["redis>=5.0"]
+
+checksum = ["xxhash>=3.4", "murmurhash>=1.0.10"]
+
+dev = [
+    "build>=1.2",
+    "flake8>=7.1",
+    "pytest>=9.0",
+]
+
+all = [
+    "brotli>=1.1",
+    "cbor2>=5.6",
+    "leveldb>=0.201",
+    "lmdb>=1.4",
+    "lsm>=0.5",
+    "lz4>=4.3",
+    "msgpack>=1.0",
+    "murmurhash>=1.0.10",
+    "orjson>=3.10",
+    "pymongo>=4.6",
+    "python-lzf>=0.2.6",
+    "python-lzo>=1.15",
+    "python-rapidjson>=1.18",
+    "python-snappy>=0.7",
+    "redis>=5.0",
+    "simplejson>=3.19",
+    "ujson>=5.10",
+    "xxhash>=3.4",
+    "zopfli>=0.2.3",
+    "zstd>=1.5",
+]
+
+[tool.setuptools.dynamic]
+version = { attr = "stash.__version__" }
+
+[tool.setuptools.packages.find]
+include = ["stash", "stash.*"]
