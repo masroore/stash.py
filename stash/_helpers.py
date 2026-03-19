@@ -1,8 +1,74 @@
 import functools
+import hashlib
+from importlib import import_module
+from typing import Any, Callable, Dict, Optional, Tuple
 
 from stash.consts import SIZE_KB, SIZE_MB, SIZE_GB
 from stash.manager import StashManager
 from stash.options import StashOptions
+
+
+StorageSpec = Tuple[str, str]
+CodecSpec = Tuple[str, str]
+
+_STORAGE_REGISTRY: Dict[str, StorageSpec] = {
+    "dbm": ("stash.storages.dbm_", "DbmStorage"),
+    "filesystem": ("stash.storages.filesystem", "FileSystemStorage"),
+    "leveldb": ("stash.storages.leveldb", "LeveldbStorage"),
+    "lmdb": ("stash.storages.lmdb", "LmdbStorage"),
+    "lsmdb": ("stash.storages.lsmdb", "LsmDbStorage"),
+    "memory": ("stash.storages.memory", "MemoryStorage"),
+    "mongodb": ("stash.storages.mongodb", "MongoDbStorage"),
+    "null": ("stash.storages.null", "NullStorage"),
+    "redis": ("stash.storages.redis", "RedisStorage"),
+}
+
+_STORAGE_ALIASES = {
+    "fs": "filesystem",
+    "mongo": "mongodb",
+}
+
+_CODEC_REGISTRY: Dict[str, CodecSpec] = {
+    "brotli": ("stash.codecs.brotli", "BrotliCodec"),
+    "lzma": ("stash.codecs.lzma", "LzmaCodec"),
+    "passthru": ("stash.codecs.passthru", "PassthruCodec"),
+    "zlib": ("stash.codecs.zlib", "ZlibCodec"),
+    "zstd": ("stash.codecs.zstd", "ZstdCodec"),
+}
+
+_CODEC_ALIASES = {
+    "passthrough": "passthru",
+}
+
+_COMPAT_HELPERS = {
+    "get_dbm_brotli_stash": ("dbm", "brotli", True),
+    "get_dbm_lzma_stash": ("dbm", "lzma", True),
+    "get_dbm_stash": ("dbm", "passthru", True),
+    "get_dbm_zlib_stash": ("dbm", "zlib", True),
+    "get_dbm_zstd_stash": ("dbm", "zstd", True),
+    "get_fs_brotli_stash": ("filesystem", "brotli", True),
+    "get_fs_lzma_stash": ("filesystem", "lzma", True),
+    "get_fs_stash": ("filesystem", None, True),
+    "get_fs_zlib_stash": ("filesystem", "zlib", True),
+    "get_fs_zstd_stash": ("filesystem", "zstd", True),
+    "get_leveldb_brotli_stash": ("leveldb", "brotli", True),
+    "get_leveldb_lzma_stash": ("leveldb", "lzma", True),
+    "get_leveldb_stash": ("leveldb", "passthru", True),
+    "get_leveldb_zlib_stash": ("leveldb", "zlib", True),
+    "get_leveldb_zstd_stash": ("leveldb", "zstd", True),
+    "get_lmdb_brotli_stash": ("lmdb", "brotli", True),
+    "get_lmdb_lzma_stash": ("lmdb", "lzma", True),
+    "get_lmdb_stash": ("lmdb", "passthru", True),
+    "get_lmdb_zlib_stash": ("lmdb", "zlib", True),
+    "get_lmdb_zstd_stash": ("lmdb", "zstd", True),
+    "get_lsmdb_brotli_stash": ("lsmdb", "brotli", True),
+    "get_lsmdb_lzma_stash": ("lsmdb", "lzma", True),
+    "get_lsmdb_stash": ("lsmdb", "passthru", True),
+    "get_lsmdb_zlib_stash": ("lsmdb", "zlib", True),
+    "get_lsmdb_zstd_stash": ("lsmdb", "zstd", True),
+    "get_mongo_zlib_stash": ("mongodb", "zlib", True),
+    "get_null_stash": ("null", "passthru", False),
+}
 
 
 def size_kb(n: int) -> int:
@@ -17,236 +83,109 @@ def size_gb(n: int) -> int:
     return SIZE_GB * n
 
 
+def _load_component(spec: Tuple[str, str]) -> Any:
+    module_name, class_name = spec
+    module = import_module(module_name)
+    return getattr(module, class_name)
+
+
+def _normalize_storage_name(storage_name: str) -> str:
+    normalized = storage_name.strip().lower()
+    return _STORAGE_ALIASES.get(normalized, normalized)
+
+
+def _normalize_codec_name(codec_name: Optional[str]) -> Optional[str]:
+    if codec_name is None:
+        return None
+
+    normalized = codec_name.strip().lower()
+    if normalized == "none":
+        return None
+    return _CODEC_ALIASES.get(normalized, normalized)
+
+
 def _init_cache(storage, codec, options: StashOptions) -> StashManager:
     cache_man = StashManager(storage=storage, codec=codec, options=options)
     return cache_man
 
 
-def _init_fs_cache(codec, options: StashOptions) -> StashManager:
-    from .storages.filesystem import FileSystemStorage
+def _create_storage(storage_name: str, options: StashOptions):
+    normalized_name = _normalize_storage_name(storage_name)
+    spec = _STORAGE_REGISTRY.get(normalized_name)
+    if spec is None:
+        raise ValueError("Unknown storage backend: {}".format(storage_name))
 
-    return _init_cache(
-        storage=FileSystemStorage(options=options), codec=codec, options=options
-    )
+    storage_class = _load_component(spec)
+    return storage_class(options=options)
 
 
-def get_fs_zlib_stash(options: StashOptions) -> StashManager:
-    from .codecs.zlib import ZlibCodec
+def _create_codec(codec_name: Optional[str]):
+    normalized_name = _normalize_codec_name(codec_name)
+    if normalized_name is None:
+        return None
 
-    return _init_fs_cache(ZlibCodec(), options=options)
+    spec = _CODEC_REGISTRY.get(normalized_name)
+    if spec is None:
+        raise ValueError("Unknown codec: {}".format(codec_name))
 
+    codec_class = _load_component(spec)
+    return codec_class()
 
-def get_fs_brotli_stash(options: StashOptions) -> StashManager:
-    from .codecs.brotli import BrotliCodec
 
-    return _init_fs_cache(BrotliCodec(), options=options)
+def get_stash(
+    storage_name: str,
+    options: Optional[StashOptions] = None,
+    codec_name: Optional[str] = None,
+) -> StashManager:
+    options = options or StashOptions()
+    storage = _create_storage(storage_name, options)
+    codec = _create_codec(codec_name)
+    return _init_cache(storage=storage, codec=codec, options=options)
 
 
-def get_fs_zstd_stash(options: StashOptions) -> StashManager:
-    from .codecs.zstd import ZstdCodec
+def _make_compat_helper(
+    storage_name: str,
+    codec_name: Optional[str],
+    expects_options: bool,
+) -> Callable[..., StashManager]:
+    if expects_options:
 
-    return _init_fs_cache(ZstdCodec(), options=options)
+        def helper_with_options(options: StashOptions) -> StashManager:
+            return get_stash(
+                storage_name=storage_name,
+                options=options,
+                codec_name=codec_name,
+            )
 
+        return helper_with_options
 
-def get_fs_lzma_stash(options: StashOptions) -> StashManager:
-    from .codecs.lzma import LzmaCodec
+    def helper_without_options() -> StashManager:
+        return get_stash(
+            storage_name=storage_name,
+            options=StashOptions(),
+            codec_name=codec_name,
+        )
 
-    return _init_fs_cache(LzmaCodec(), options=options)
+    return helper_without_options
 
 
-def get_mongo_zlib_stash(options: StashOptions) -> StashManager:
-    from .codecs.zlib import ZlibCodec
-    from .storages.mongodb import MongoDbStorage
+def _make_stashify_key(function: Callable[..., Any], args, kwargs) -> str:
+    kwargs_items = tuple(sorted(kwargs.items()))
+    payload = (function.__module__, function.__qualname__, args, kwargs_items)
+    return hashlib.sha256(repr(payload).encode("utf-8")).hexdigest()
 
-    storage = MongoDbStorage(options=options)
-    return _init_cache(storage, ZlibCodec(), options=options)
 
-
-def get_lmdb_brotli_stash(options: StashOptions) -> StashManager:
-    from .codecs.brotli import BrotliCodec
-    from .storages.lmdb import LmdbStorage
-
-    storage = LmdbStorage(options=options)
-    return _init_cache(storage, BrotliCodec(), options=options)
-
-
-def get_lmdb_lzma_stash(options: StashOptions) -> StashManager:
-    from .codecs.lzma import LzmaCodec
-    from .storages.lmdb import LmdbStorage
-
-    storage = LmdbStorage(options=options)
-    return _init_cache(storage, LzmaCodec(), options=options)
-
-
-def get_lmdb_stash(options: StashOptions) -> StashManager:
-    from .codecs.passthru import PassthruCodec
-    from .storages.lmdb import LmdbStorage
-
-    storage = LmdbStorage(options=options)
-    return _init_cache(storage, PassthruCodec(), options=options)
-
-
-def get_lmdb_zlib_stash(options: StashOptions) -> StashManager:
-    from .codecs.zlib import ZlibCodec
-    from .storages.lmdb import LmdbStorage
-
-    storage = LmdbStorage(options=options)
-    return _init_cache(storage, ZlibCodec(), options=options)
-
-
-def get_lmdb_zstd_stash(options: StashOptions) -> StashManager:
-    from .codecs.zstd import ZstdCodec
-    from .storages.lmdb import LmdbStorage
-
-    storage = LmdbStorage(options=options)
-    return _init_cache(storage, ZstdCodec(), options=options)
-
-
-def get_fs_stash(options: StashOptions) -> StashManager:
-    return _init_fs_cache(codec=None, options=options)
-
-
-def get_null_stash() -> StashManager:
-    from .storages.null import NullStorage
-    from .codecs.passthru import PassthruCodec
-
-    options = StashOptions()
-    return _init_cache(
-        storage=NullStorage(options=options), codec=PassthruCodec(), options=options
-    )
-
-
-def get_dbm_zstd_stash(options: StashOptions) -> StashManager:
-    from .codecs.zstd import ZstdCodec
-    from .storages.dbm_ import DbmStorage
-
-    storage = DbmStorage(options=options)
-    return _init_cache(storage, ZstdCodec(), options=options)
-
-
-def get_dbm_zlib_stash(options: StashOptions) -> StashManager:
-    from .codecs.zlib import ZlibCodec
-    from .storages.dbm_ import DbmStorage
-
-    storage = DbmStorage(options=options)
-    return _init_cache(storage, ZlibCodec(), options=options)
-
-
-def get_dbm_brotli_stash(options: StashOptions) -> StashManager:
-    from .codecs.brotli import BrotliCodec
-    from .storages.dbm_ import DbmStorage
-
-    storage = DbmStorage(options=options)
-    return _init_cache(storage, BrotliCodec(), options=options)
-
-
-def get_dbm_lzma_stash(options: StashOptions) -> StashManager:
-    from .codecs.lzma import LzmaCodec
-    from .storages.dbm_ import DbmStorage
-
-    storage = DbmStorage(options=options)
-    return _init_cache(storage, LzmaCodec(), options=options)
-
-
-def get_dbm_stash(options: StashOptions) -> StashManager:
-    from .storages.dbm_ import DbmStorage
-    from .codecs.passthru import PassthruCodec
-
-    storage = DbmStorage(options=options)
-    return _init_cache(storage, codec=PassthruCodec(), options=options)
-
-
-def get_lsmdb_brotli_stash(options: StashOptions) -> StashManager:
-    from .codecs.brotli import BrotliCodec
-    from .storages.lsmdb import LsmDbStorage
-
-    storage = LsmDbStorage(options=options)
-    return _init_cache(storage, BrotliCodec(), options=options)
-
-
-def get_lsmdb_zstd_stash(options: StashOptions) -> StashManager:
-    from .codecs.zstd import ZstdCodec
-    from .storages.lsmdb import LsmDbStorage
-
-    storage = LsmDbStorage(options=options)
-    return _init_cache(storage, ZstdCodec(), options=options)
-
-
-def get_lsmdb_lzma_stash(options: StashOptions) -> StashManager:
-    from .codecs.lzma import LzmaCodec
-    from .storages.lsmdb import LsmDbStorage
-
-    storage = LsmDbStorage(options=options)
-    return _init_cache(storage, LzmaCodec(), options=options)
-
-
-def get_lsmdb_zlib_stash(options: StashOptions) -> StashManager:
-    from .codecs.zlib import ZlibCodec
-    from .storages.lsmdb import LsmDbStorage
-
-    storage = LsmDbStorage(options=options)
-    return _init_cache(storage, ZlibCodec(), options=options)
-
-
-def get_lsmdb_stash(options: StashOptions) -> StashManager:
-    from .storages.lsmdb import LsmDbStorage
-    from .codecs.passthru import PassthruCodec
-
-    storage = LsmDbStorage(options=options)
-    return _init_cache(storage, codec=PassthruCodec(), options=options)
-
-
-def get_leveldb_stash(options: StashOptions) -> StashManager:
-    from .storages.leveldb import LeveldbStorage
-    from .codecs.passthru import PassthruCodec
-
-    storage = LeveldbStorage(options=options)
-    return _init_cache(storage, codec=PassthruCodec(), options=options)
-
-
-def get_leveldb_brotli_stash(options: StashOptions) -> StashManager:
-    from .codecs.brotli import BrotliCodec
-    from .storages.leveldb import LeveldbStorage
-
-    storage = LeveldbStorage(options=options)
-    return _init_cache(storage, BrotliCodec(), options=options)
-
-
-def get_leveldb_zstd_stash(options: StashOptions) -> StashManager:
-    from .codecs.zstd import ZstdCodec
-    from .storages.leveldb import LeveldbStorage
-
-    storage = LeveldbStorage(options=options)
-    return _init_cache(storage, ZstdCodec(), options=options)
-
-
-def get_leveldb_lzma_stash(options: StashOptions) -> StashManager:
-    from .codecs.lzma import LzmaCodec
-    from .storages.leveldb import LeveldbStorage
-
-    storage = LeveldbStorage(options=options)
-    return _init_cache(storage, LzmaCodec(), options=options)
-
-
-def get_leveldb_zlib_stash(options: StashOptions) -> StashManager:
-    from .codecs.zlib import ZlibCodec
-    from .storages.leveldb import LeveldbStorage
-
-    storage = LeveldbStorage(options=options)
-    return _init_cache(storage, ZlibCodec(), options=options)
-
-
-def stashify(stash: StashManager = None):
+def stashify(stash: Optional[StashManager] = None):
     stash_ = stash
 
     def decorator(function):
         stash = stash_
         if stash is None:
-            stash = get_fs_stash(StashOptions())
+            stash = get_stash("filesystem", StashOptions())
 
         @functools.wraps(function)
         def func(*args, **kwargs):
-            key = str(args)
+            key = _make_stashify_key(function, args, kwargs)
             if not stash.exists(key):
                 content = function(*args, **kwargs)
                 stash.write(key=key, content=content)
@@ -257,3 +196,42 @@ def stashify(stash: StashManager = None):
         return func
 
     return decorator
+
+
+get_dbm_brotli_stash = _make_compat_helper("dbm", "brotli", True)
+get_dbm_lzma_stash = _make_compat_helper("dbm", "lzma", True)
+get_dbm_stash = _make_compat_helper("dbm", "passthru", True)
+get_dbm_zlib_stash = _make_compat_helper("dbm", "zlib", True)
+get_dbm_zstd_stash = _make_compat_helper("dbm", "zstd", True)
+get_fs_brotli_stash = _make_compat_helper("filesystem", "brotli", True)
+get_fs_lzma_stash = _make_compat_helper("filesystem", "lzma", True)
+get_fs_stash = _make_compat_helper("filesystem", None, True)
+get_fs_zlib_stash = _make_compat_helper("filesystem", "zlib", True)
+get_fs_zstd_stash = _make_compat_helper("filesystem", "zstd", True)
+get_leveldb_brotli_stash = _make_compat_helper("leveldb", "brotli", True)
+get_leveldb_lzma_stash = _make_compat_helper("leveldb", "lzma", True)
+get_leveldb_stash = _make_compat_helper("leveldb", "passthru", True)
+get_leveldb_zlib_stash = _make_compat_helper("leveldb", "zlib", True)
+get_leveldb_zstd_stash = _make_compat_helper("leveldb", "zstd", True)
+get_lmdb_brotli_stash = _make_compat_helper("lmdb", "brotli", True)
+get_lmdb_lzma_stash = _make_compat_helper("lmdb", "lzma", True)
+get_lmdb_stash = _make_compat_helper("lmdb", "passthru", True)
+get_lmdb_zlib_stash = _make_compat_helper("lmdb", "zlib", True)
+get_lmdb_zstd_stash = _make_compat_helper("lmdb", "zstd", True)
+get_lsmdb_brotli_stash = _make_compat_helper("lsmdb", "brotli", True)
+get_lsmdb_lzma_stash = _make_compat_helper("lsmdb", "lzma", True)
+get_lsmdb_stash = _make_compat_helper("lsmdb", "passthru", True)
+get_lsmdb_zlib_stash = _make_compat_helper("lsmdb", "zlib", True)
+get_lsmdb_zstd_stash = _make_compat_helper("lsmdb", "zstd", True)
+get_mongo_zlib_stash = _make_compat_helper("mongodb", "zlib", True)
+get_null_stash = _make_compat_helper("null", "passthru", False)
+
+
+__all__ = [
+    "get_stash",
+    "size_gb",
+    "size_kb",
+    "size_mb",
+    "stashify",
+    *_COMPAT_HELPERS.keys(),
+]

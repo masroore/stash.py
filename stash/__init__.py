@@ -1,6 +1,7 @@
 from typing import List
 
 import stash.consts
+import stash._helpers as stash_helpers
 from stash._helpers import *
 from stash.codecs.brotli import BrotliCodec
 from stash.codecs.bzip2 import BZip2Codec
@@ -80,5 +81,5 @@ __all__: List[str] = [
     "NullStorage",
     "MongoDbStorage",
     "RedisStorage",
-    "stashify",
+    *stash_helpers.__all__,
 ]
