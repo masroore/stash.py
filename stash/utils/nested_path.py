@@ -1,6 +1,7 @@
 import errno
 import fnmatch
 import os
+from typing import Optional
 
 
 def split_segments(s: str, level: int, segment_size: int) -> list:
@@ -60,7 +61,7 @@ class NestedPathBuilder(object):
         dirname, _ = self.__resolve_dir_path(key)
         return dirname
 
-    def resolve_path_ext(self, key: str, suffix: str = None) -> str:
+    def resolve_path_ext(self, key: str, suffix: Optional[str] = None) -> str:
         # return os.path.join(self.resolve_dir(key), key + suffix if suffix else key)
         path = self.resolve_path(key)
         return path + suffix if suffix else path
