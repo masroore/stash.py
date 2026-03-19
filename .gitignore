@@ -64,3 +64,9 @@ docs/_build/
 
 # Windows
 Thumbs.db
+
+.agents/
+.claude/
+.github/
+.kilocode/
+skills-lock.json
