@@ -29,6 +29,8 @@ def calcsum(payload: str, algo: str) -> str:
     elif algo == CHECKSUM_ALGO_MURMUR:
         return calc_murmur(payload)
 
+    raise ValueError("Unknown checksum algorithm: {}".format(algo))
+
 
 def to_bytes(data) -> bytes:
     if isinstance(data, str):
@@ -45,20 +47,30 @@ def calc_sha1(data: str) -> str:
 
 
 def calc_xxh32(data: str) -> str:
+    if _xxhash is None:
+        raise RuntimeError("xxhash dependency is required for xxh32 algorithm")
     return _xxhash.xxh32(data).hexdigest().lower()
 
 
 def calc_xxh64(data: str) -> str:
+    if _xxhash is None:
+        raise RuntimeError("xxhash dependency is required for xxh64 algorithm")
     return _xxhash.xxh64(data).hexdigest().lower()
 
 
 def calc_xxh3_64(data: str) -> str:
+    if _xxhash is None:
+        raise RuntimeError("xxhash dependency is required for xxh3_64 algorithm")
     return _xxhash.xxh3_64(data).hexdigest().lower()
 
 
 def calc_xxh3_128(data: str) -> str:
+    if _xxhash is None:
+        raise RuntimeError("xxhash dependency is required for xxh3_128 algorithm")
     return _xxhash.xxh3_128(data).hexdigest().lower()
 
 
 def calc_murmur(data: str) -> str:
-    return _murmurhash.hash(data).lower()
+    if _murmurhash is None:
+        raise RuntimeError("murmurhash dependency is required for murmur algorithm")
+    return str(_murmurhash.hash(data)).lower()
