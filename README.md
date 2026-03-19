@@ -95,4 +95,5 @@ Install development tooling and run tests:
 ```bash
 python -m pip install -e ".[dev]"
 pytest -q
+mypy
 ```
