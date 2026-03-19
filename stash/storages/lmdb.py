@@ -21,9 +21,9 @@ class LmdbStorage(Storage):
         )
 
     def exists(self, key: str) -> bool:
-        key = self.normalize_string(key)
+        key_bytes = self.normalize_string(key)
         with self._env.begin(db=self._db) as txn:
-            return txn.get(key) is not None
+            return txn.get(key_bytes) is not None
 
     def purge(self, cutoff: int):
         pass
@@ -40,16 +40,16 @@ class LmdbStorage(Storage):
         self._env.close()
 
     def write(self, key: str, content):
-        key = self.normalize_string(key)
+        key_bytes = self.normalize_string(key)
         with self._env.begin(write=True, db=self._db) as txn:
-            txn.put(key, content)
+            txn.put(key_bytes, content)
 
     def read(self, key: str):
-        key = self.normalize_string(key)
+        key_bytes = self.normalize_string(key)
         with self._env.begin(db=self._db) as txn:
-            return txn.get(key)
+            return txn.get(key_bytes)
 
     def rm(self, key: str):
-        key = self.normalize_string(key)
+        key_bytes = self.normalize_string(key)
         with self._env.begin(write=True, db=self._db) as txn:
-            txn.delete(key)
+            txn.delete(key_bytes)
