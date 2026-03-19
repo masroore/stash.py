@@ -1,5 +1,6 @@
 import os
 from time import time
+from typing import Optional
 
 try:
     from lsm import LSM
@@ -26,22 +27,22 @@ class LsmDbStorage(Storage):
         # if self._meta_key(key) not in self.__db.keys(): return False
         return self._data_key(key) in self.__db.keys()
 
-    def purge(self, cutoff: int):
+    def purge(self, cutoff: int) -> None:
         pass
 
-    def clear(self):
+    def clear(self) -> None:
         for k in self.__db.keys():
             del self.__db[k]
 
-    def close(self):
+    def close(self) -> None:
         self.__db.close()
 
-    def write(self, key: str, content):
+    def write(self, key: str, content: bytes) -> None:
         self.__db[self._data_key(key)] = content
         self.__db[self._meta_key(key)] = str(time())
 
-    def read(self, key: str):
+    def read(self, key: str) -> Optional[bytes]:
         return self.__db[self._data_key(key)]
 
-    def rm(self, key: str):
+    def rm(self, key: str) -> None:
         del self.__db[self._data_key(key)]

@@ -7,8 +7,8 @@ except ImportError:
 
 
 class BrotliCodec(Codec):
-    def encode(self, data):
+    def encode(self, data: bytes) -> bytes:
         return brotli.compress(data)
 
-    def decode(self, data):
+    def decode(self, data: bytes) -> bytes:
         return brotli.decompress(data)

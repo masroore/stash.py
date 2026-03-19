@@ -7,8 +7,8 @@ except ImportError:
 
 
 class Lz4Codec(Codec):
-    def encode(self, data):
+    def encode(self, data: bytes) -> bytes:
         return lz4.frame.compress(data)
 
-    def decode(self, data):
+    def decode(self, data: bytes) -> bytes:
         return lz4.frame.decompress(data)

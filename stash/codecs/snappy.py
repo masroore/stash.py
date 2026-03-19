@@ -7,8 +7,8 @@ except ImportError:
 
 
 class SnappyCodec(Codec):
-    def encode(self, data):
+    def encode(self, data: bytes) -> bytes:
         return snappy.compress(data)
 
-    def decode(self, data):
+    def decode(self, data: bytes) -> bytes:
         return snappy.uncompress(data)

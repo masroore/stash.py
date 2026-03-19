@@ -3,6 +3,7 @@ import os
 import shutil
 import time
 from stat import S_ISREG
+from typing import Optional
 
 from stash.options import StashOptions
 from stash.storages.storage import Storage
@@ -56,7 +57,7 @@ class FileSystemStorage(Storage):
 
         return False
 
-    def purge(self, cutoff: int):
+    def purge(self, cutoff: int) -> None:
         files = walk_files(
             self.options.fs_cache_dir, "*" + self.options.fs_cache_file_ext
         )
@@ -75,7 +76,7 @@ class FileSystemStorage(Storage):
 
                         self.options.logger.error(traceback.format_exc())
 
-    def clear(self):
+    def clear(self) -> None:
         try:
             shutil.rmtree(self.options.fs_cache_dir, ignore_errors=True)
         except (IOError, OSError) as e:
@@ -86,18 +87,18 @@ class FileSystemStorage(Storage):
 
                     self.options.logger.error(traceback.format_exc())
 
-    def close(self):
+    def close(self) -> None:
         pass
 
-    def write(self, key: str, content):
+    def write(self, key: str, content: bytes) -> None:
         with open(self.resolve_filepath(key), "wb") as f:
             f.write(content)
 
-    def read(self, key: str):
+    def read(self, key: str) -> Optional[bytes]:
         with open(self.resolve_filepath(key), "rb") as f:
             return f.read()
 
-    def rm(self, key: str):
+    def rm(self, key: str) -> None:
         fpath = self.resolve_filepath(key)
         if os.path.isfile(fpath):
             os.unlink(fpath)

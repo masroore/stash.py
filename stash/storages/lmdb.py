@@ -6,6 +6,7 @@ except ImportError:
 from stash.options import StashOptions
 from stash.storages.storage import Storage
 from stash.utils.checksum import to_bytes
+from typing import Optional
 
 
 class LmdbStorage(Storage):
@@ -25,31 +26,31 @@ class LmdbStorage(Storage):
         with self._env.begin(db=self._db) as txn:
             return txn.get(key_bytes) is not None
 
-    def purge(self, cutoff: int):
+    def purge(self, cutoff: int) -> None:
         pass
 
     @staticmethod
     def normalize_string(key: str) -> bytes:
         return to_bytes(key.strip())
 
-    def clear(self):
+    def clear(self) -> None:
         with self._env.begin(write=True, db=self._db) as txn:
             txn.drop(self._db, delete=False)
 
-    def close(self):
+    def close(self) -> None:
         self._env.close()
 
-    def write(self, key: str, content):
+    def write(self, key: str, content: bytes) -> None:
         key_bytes = self.normalize_string(key)
         with self._env.begin(write=True, db=self._db) as txn:
             txn.put(key_bytes, content)
 
-    def read(self, key: str):
+    def read(self, key: str) -> Optional[bytes]:
         key_bytes = self.normalize_string(key)
         with self._env.begin(db=self._db) as txn:
             return txn.get(key_bytes)
 
-    def rm(self, key: str):
+    def rm(self, key: str) -> None:
         key_bytes = self.normalize_string(key)
         with self._env.begin(write=True, db=self._db) as txn:
             txn.delete(key_bytes)

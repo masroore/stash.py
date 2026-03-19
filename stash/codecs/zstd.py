@@ -7,8 +7,8 @@ except ImportError:
 
 
 class ZstdCodec(Codec):
-    def encode(self, data, level=10):
-        return zstd.compress(data, level)
+    def encode(self, data: bytes) -> bytes:
+        return zstd.compress(data, 10)
 
-    def decode(self, data):
+    def decode(self, data: bytes) -> bytes:
         return zstd.decompress(data)

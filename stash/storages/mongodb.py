@@ -1,4 +1,5 @@
 from datetime import datetime
+from typing import Optional
 
 try:
     from pymongo import MongoClient
@@ -25,24 +26,24 @@ class MongoDbStorage(Storage):
     def exists(self, key: str) -> bool:
         return self.cache_items.find_one({"_id": key}) is not None
 
-    def purge(self, cutoff: int):
+    def purge(self, cutoff: int) -> None:
         pass
 
-    def clear(self):
+    def clear(self) -> None:
         self.cache_items.drop()
 
-    def close(self):
+    def close(self) -> None:
         self.client.close()
 
-    def write(self, key: str, content):
+    def write(self, key: str, content: bytes) -> None:
         item = {"data": Binary(content), "timestamp": datetime.utcnow()}
         self.cache_items.update_one({"_id": key}, {"$set": item}, upsert=True)
 
-    def read(self, key: str):
+    def read(self, key: str) -> Optional[bytes]:
         item = self.cache_items.find_one({"_id": key})
         if item:
             return item["data"]
         return None
 
-    def rm(self, key: str):
+    def rm(self, key: str) -> None:
         self.cache_items.delete_one({"_id": key})

@@ -7,8 +7,8 @@ except ImportError:
 
 
 class BZip2Codec(Codec):
-    def encode(self, data):
+    def encode(self, data: bytes) -> bytes:
         return bz2.compress(data)
 
-    def decode(self, data):
+    def decode(self, data: bytes) -> bytes:
         return bz2.decompress(data)

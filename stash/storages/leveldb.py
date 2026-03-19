@@ -32,7 +32,7 @@ class LeveldbStorage(Storage):
     def _encode_str(s: str) -> bytes:
         return to_bytes(s.strip())
 
-    def close(self):
+    def close(self) -> None:
         if self._db is not None:
             self._db.close(compact=True)
             self._db = None
@@ -46,16 +46,16 @@ class LeveldbStorage(Storage):
         except LevelDBException:
             return False
 
-    def purge(self, cutoff: int):
+    def purge(self, cutoff: int) -> None:
         pass
 
-    def clear(self):
+    def clear(self) -> None:
         if self._db is None:
             return
         for key in self._db.keys():
             self._db.delete(key)
 
-    def write(self, key: str, content):
+    def write(self, key: str, content: bytes) -> None:
         if self._db is None:
             return
         self._db.put(self._encode_str(key), to_bytes(content))
@@ -68,7 +68,7 @@ class LeveldbStorage(Storage):
         except LevelDBException:
             return None
 
-    def rm(self, key: str):
+    def rm(self, key: str) -> None:
         if self._db is None:
             return
         self._db.delete(self._encode_str(key))

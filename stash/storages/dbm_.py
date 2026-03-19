@@ -1,6 +1,7 @@
 import os
 from time import time
 import dbm
+from typing import Optional
 from stash.options import StashOptions
 from stash.storages.storage import Storage
 
@@ -21,22 +22,22 @@ class DbmStorage(Storage):
     def exists(self, key: str) -> bool:
         return self._data_key(key) in self.__db
 
-    def purge(self, cutoff: int):
+    def purge(self, cutoff: int) -> None:
         pass
 
-    def clear(self):
+    def clear(self) -> None:
         self.__db.clear()
 
-    def close(self):
+    def close(self) -> None:
         self.__db.close()
 
-    def write(self, key: str, content):
+    def write(self, key: str, content: bytes) -> None:
         self.__db[self._data_key(key)] = content
         self.__db[self._meta_key(key)] = str(time())
 
-    def read(self, key: str):
+    def read(self, key: str) -> Optional[bytes]:
         return self.__db.get(self._data_key(key))
 
-    def rm(self, key: str):
+    def rm(self, key: str) -> None:
         self.__db.pop(self._data_key(key), None)
         self.__db.pop(self._meta_key(key), None)
