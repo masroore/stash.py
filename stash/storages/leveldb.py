@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import os.path
+from typing import Optional
 
 from stash.utils.checksum import to_bytes
 
@@ -59,7 +60,7 @@ class LeveldbStorage(Storage):
             return
         self._db.put(self._encode_str(key), to_bytes(content))
 
-    def read(self, key: str) -> bytes:
+    def read(self, key: str) -> Optional[bytes]:
         if self._db is None:
             return None
         try:
