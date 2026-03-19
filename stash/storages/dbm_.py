@@ -38,4 +38,5 @@ class DbmStorage(Storage):
         return self.__db.get(self._data_key(key))
 
     def rm(self, key: str):
-        self.__db.pop(key)
+        self.__db.pop(self._data_key(key), None)
+        self.__db.pop(self._meta_key(key), None)
