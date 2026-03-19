@@ -1,4 +1,5 @@
 from abc import ABC, abstractmethod
+from typing import Optional
 
 from stash.options import StashOptions
 
@@ -9,28 +10,28 @@ class Storage(ABC):
 
     @abstractmethod
     def exists(self, key: str) -> bool:
-        return False
+        raise NotImplementedError()
 
     @abstractmethod
-    def purge(self, cutoff: int):
-        pass
+    def purge(self, cutoff: int) -> None:
+        raise NotImplementedError()
 
     @abstractmethod
-    def clear(self):
-        pass
+    def clear(self) -> None:
+        raise NotImplementedError()
 
     @abstractmethod
-    def close(self):
-        pass
+    def close(self) -> None:
+        raise NotImplementedError()
 
     @abstractmethod
-    def write(self, key: str, content):
-        pass
+    def write(self, key: str, content: bytes) -> None:
+        raise NotImplementedError()
 
     @abstractmethod
-    def read(self, key: str):
-        pass
+    def read(self, key: str) -> Optional[bytes]:
+        raise NotImplementedError()
 
     @abstractmethod
-    def rm(self, key: str):
-        pass
+    def rm(self, key: str) -> None:
+        raise NotImplementedError()

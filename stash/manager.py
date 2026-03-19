@@ -1,4 +1,6 @@
 from __future__ import absolute_import
+from types import TracebackType
+from typing import Any, Literal
 
 from stash import defaults
 from stash.codecs.codec import Codec
@@ -22,46 +24,51 @@ class StashManager(object):
         self.__options = options
         self.__serializer = serializer or DefaultSerializer()
 
-    def __get_cache_key(self, data):
+    def __get_cache_key(self, data: str) -> str:
         return calcsum(data, self.__options.algo)
 
-    def __encode(self, data):
+    def __encode(self, data: Any) -> bytes:
         data = self.__serializer.serialize(data) if self.__serializer else data
         data = to_bytes(data)
         return self.__codec.encode(data) if self.__codec else data
 
-    def __decode(self, data):
+    def __decode(self, data: bytes) -> Any:
         data = self.__codec.decode(data) if self.__codec else data
         return self.__serializer.deserialize(data) if self.__serializer else data
 
-    def __enter__(self):
+    def __enter__(self) -> "StashManager":
         return self
 
-    def __exit__(self, exc_type, exc_value, traceback):
+    def __exit__(
+        self,
+        exc_type: type[BaseException] | None,
+        exc_value: BaseException | None,
+        traceback: TracebackType | None,
+    ) -> Literal[False]:
         self.close()
         return False
 
     def exists(self, key: str) -> bool:
         return self.__storage.exists(self.__get_cache_key(key))
 
-    def purge(self, cutoff: int = defaults.CACHE_MAX_AGE):
+    def purge(self, cutoff: int = defaults.CACHE_MAX_AGE) -> None:
         return self.__storage.purge(cutoff)
 
-    def clear(self):
+    def clear(self) -> None:
         return self.__storage.clear()
 
-    def close(self):
+    def close(self) -> None:
         return self.__storage.close()
 
-    def write(self, key: str, content):
+    def write(self, key: str, content: Any) -> None:
         data = self.__encode(content)
         return self.__storage.write(self.__get_cache_key(key), data)
 
-    def read(self, key: str):
+    def read(self, key: str) -> Any:
         data = self.__storage.read(self.__get_cache_key(key))
         if data is not None:
             return self.__decode(data)
         return None
 
-    def rm(self, key: str):
+    def rm(self, key: str) -> None:
         self.__storage.rm(self.__get_cache_key(key))

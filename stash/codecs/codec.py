@@ -3,9 +3,9 @@ from abc import ABC, abstractmethod
 
 class Codec(ABC):
     @abstractmethod
-    def encode(self, data):
-        pass
+    def encode(self, data: bytes) -> bytes:
+        raise NotImplementedError()
 
     @abstractmethod
-    def decode(self, data: bytes):
-        pass
+    def decode(self, data: bytes) -> bytes:
+        raise NotImplementedError()
