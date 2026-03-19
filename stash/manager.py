@@ -1,4 +1,5 @@
 from __future__ import absolute_import
+from typing import Optional
 
 from stash import defaults
 from stash.codecs.codec import Codec
@@ -15,7 +16,7 @@ class StashManager(object):
         storage: Storage,
         codec: Codec,
         options: StashOptions,
-        serializer: Serializer = None,
+        serializer: Optional[Serializer] = None,
     ):
         self.__storage = storage
         self.__codec = codec
