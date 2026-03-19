@@ -29,9 +29,9 @@ _default = {
 class StashOptions(object):
     def __init__(self, data=None):
         if data is None:
-            data = _default
+            data = dict(_default)
         else:
-            data |= _default
+            data = {**_default, **data}
         super().__setattr__("data", {})
         self.data = data
 
