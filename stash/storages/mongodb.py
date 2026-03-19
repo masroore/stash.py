@@ -45,4 +45,4 @@ class MongoDbStorage(Storage):
         return None
 
     def rm(self, key: str):
-        pass
+        self.cache_items.delete_one({"_id": key})
