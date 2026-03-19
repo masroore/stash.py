@@ -33,6 +33,19 @@ def test_get_stash_supports_serializer_selection():
     assert stash.read("hello") == {"message": "world"}
 
 
+def test_get_stash_supports_enum_names():
+    stash = helpers.get_stash(
+        helpers.StorageName.MEMORY,
+        StashOptions({"algo": "md5"}),
+        helpers.CodecName.PASSTHRU,
+        helpers.SerializerName.JSON,
+    )
+
+    stash.write("enum-key", {"message": "ok"})
+
+    assert stash.read("enum-key") == {"message": "ok"}
+
+
 def test_compatibility_wrapper_still_builds_filesystem_stash(tmp_path):
     stash = helpers.get_fs_stash(_filesystem_options(tmp_path))
 
@@ -62,6 +75,19 @@ def test_get_stash_rejects_unknown_serializer():
         assert str(exc) == "Unknown serializer: missing-serializer"
     else:
         raise AssertionError("Expected ValueError for unknown serializer")
+
+
+def test_get_stash_rejects_unknown_codec():
+    try:
+        helpers.get_stash(
+            helpers.StorageName.MEMORY,
+            StashOptions({"algo": "md5"}),
+            "missing-codec",
+        )
+    except ValueError as exc:
+        assert str(exc) == "Unknown codec: missing-codec"
+    else:
+        raise AssertionError("Expected ValueError for unknown codec")
 
 
 def test_stashify_uses_kwargs_in_cache_key():

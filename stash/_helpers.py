@@ -1,5 +1,6 @@
 import functools
 import hashlib
+from enum import Enum
 from importlib import import_module
 from typing import Callable, Dict, Optional, Protocol, Tuple, TypeVar, cast
 
@@ -14,7 +15,44 @@ from stash.storages.storage import Storage
 StorageSpec = Tuple[str, str]
 CodecSpec = Tuple[str, str]
 SerializerSpec = Tuple[str, str]
-CompatHelperSpec = Tuple[str, Optional[str], bool]
+
+
+class StorageName(str, Enum):
+    DBM = "dbm"
+    FILESYSTEM = "filesystem"
+    LEVELDB = "leveldb"
+    LMDB = "lmdb"
+    LSMDB = "lsmdb"
+    MEMORY = "memory"
+    MONGODB = "mongodb"
+    NULL = "null"
+    REDIS = "redis"
+
+
+class CodecName(str, Enum):
+    BROTLI = "brotli"
+    LZMA = "lzma"
+    PASSTHRU = "passthru"
+    ZLIB = "zlib"
+    ZSTD = "zstd"
+
+
+class SerializerName(str, Enum):
+    BSON = "bson"
+    CBOR = "cbor"
+    DEFAULT = "default"
+    JSON = "json"
+    MSGPACK = "msgpack"
+    ORJSON = "orjson"
+    RAPIDJSON = "rapidjson"
+    SIMPLEJSON = "simplejson"
+    UJSON = "ujson"
+
+
+StorageNameInput = StorageName | str
+CodecNameInput = CodecName | str
+SerializerNameInput = SerializerName | str
+CompatHelperSpec = Tuple[StorageName, Optional[CodecName], bool]
 
 StorageT = TypeVar("StorageT", bound=Storage, covariant=True)
 CodecT = TypeVar("CodecT", bound=Codec, covariant=True)
@@ -32,79 +70,79 @@ class ComponentConstructor(Protocol[CodecT]):
 class SerializerConstructor(Protocol[SerializerT]):
     def __call__(self) -> SerializerT: ...
 
-_STORAGE_REGISTRY: Dict[str, StorageSpec] = {
-    "dbm": ("stash.storages.dbm_", "DbmStorage"),
-    "filesystem": ("stash.storages.filesystem", "FileSystemStorage"),
-    "leveldb": ("stash.storages.leveldb", "LeveldbStorage"),
-    "lmdb": ("stash.storages.lmdb", "LmdbStorage"),
-    "lsmdb": ("stash.storages.lsmdb", "LsmDbStorage"),
-    "memory": ("stash.storages.memory", "MemoryStorage"),
-    "mongodb": ("stash.storages.mongodb", "MongoDbStorage"),
-    "null": ("stash.storages.null", "NullStorage"),
-    "redis": ("stash.storages.redis", "RedisStorage"),
+_STORAGE_REGISTRY: Dict[StorageName, StorageSpec] = {
+    StorageName.DBM: ("stash.storages.dbm_", "DbmStorage"),
+    StorageName.FILESYSTEM: ("stash.storages.filesystem", "FileSystemStorage"),
+    StorageName.LEVELDB: ("stash.storages.leveldb", "LeveldbStorage"),
+    StorageName.LMDB: ("stash.storages.lmdb", "LmdbStorage"),
+    StorageName.LSMDB: ("stash.storages.lsmdb", "LsmDbStorage"),
+    StorageName.MEMORY: ("stash.storages.memory", "MemoryStorage"),
+    StorageName.MONGODB: ("stash.storages.mongodb", "MongoDbStorage"),
+    StorageName.NULL: ("stash.storages.null", "NullStorage"),
+    StorageName.REDIS: ("stash.storages.redis", "RedisStorage"),
 }
 
-_STORAGE_ALIASES = {
-    "fs": "filesystem",
-    "mongo": "mongodb",
+_STORAGE_ALIASES: Dict[str, StorageName] = {
+    "fs": StorageName.FILESYSTEM,
+    "mongo": StorageName.MONGODB,
 }
 
-_CODEC_REGISTRY: Dict[str, CodecSpec] = {
-    "brotli": ("stash.codecs.brotli", "BrotliCodec"),
-    "lzma": ("stash.codecs.lzma", "LzmaCodec"),
-    "passthru": ("stash.codecs.passthru", "PassthruCodec"),
-    "zlib": ("stash.codecs.zlib", "ZlibCodec"),
-    "zstd": ("stash.codecs.zstd", "ZstdCodec"),
+_CODEC_REGISTRY: Dict[CodecName, CodecSpec] = {
+    CodecName.BROTLI: ("stash.codecs.brotli", "BrotliCodec"),
+    CodecName.LZMA: ("stash.codecs.lzma", "LzmaCodec"),
+    CodecName.PASSTHRU: ("stash.codecs.passthru", "PassthruCodec"),
+    CodecName.ZLIB: ("stash.codecs.zlib", "ZlibCodec"),
+    CodecName.ZSTD: ("stash.codecs.zstd", "ZstdCodec"),
 }
 
-_CODEC_ALIASES = {
-    "passthrough": "passthru",
+_CODEC_ALIASES: Dict[str, CodecName] = {
+    "passthrough": CodecName.PASSTHRU,
 }
 
-_SERIALIZER_REGISTRY: Dict[str, SerializerSpec] = {
-    "bson": ("stash.serializers.bson", "BSONSerializer"),
-    "cbor": ("stash.serializers.cbor", "CBORSerializer"),
-    "default": ("stash.serializers.default", "DefaultSerializer"),
-    "json": ("stash.serializers.json", "JSONSerializer"),
-    "msgpack": ("stash.serializers.msgpack", "MsgPackSerializer"),
-    "orjson": ("stash.serializers.orjson", "OrJSONSerializer"),
-    "rapidjson": ("stash.serializers.rapidjson", "RapidJSONSerializer"),
-    "simplejson": ("stash.serializers.simplejson", "SimpleJSONSerializer"),
-    "ujson": ("stash.serializers.ujson", "UltraJSONSerializer"),
+_SERIALIZER_REGISTRY: Dict[SerializerName, SerializerSpec] = {
+    SerializerName.BSON: ("stash.serializers.bson", "BSONSerializer"),
+    SerializerName.CBOR: ("stash.serializers.cbor", "CBORSerializer"),
+    SerializerName.DEFAULT: ("stash.serializers.default", "DefaultSerializer"),
+    SerializerName.JSON: ("stash.serializers.json", "JSONSerializer"),
+    SerializerName.MSGPACK: ("stash.serializers.msgpack", "MsgPackSerializer"),
+    SerializerName.ORJSON: ("stash.serializers.orjson", "OrJSONSerializer"),
+    SerializerName.RAPIDJSON: ("stash.serializers.rapidjson", "RapidJSONSerializer"),
+    SerializerName.SIMPLEJSON: ("stash.serializers.simplejson", "SimpleJSONSerializer"),
+    SerializerName.UJSON: ("stash.serializers.ujson", "UltraJSONSerializer"),
 }
 
-_SERIALIZER_ALIASES = {
-    "pickle": "default",
+_SERIALIZER_ALIASES: Dict[str, SerializerName] = {
+    "pickle": SerializerName.DEFAULT,
 }
 
 _COMPAT_HELPERS: Dict[str, CompatHelperSpec] = {
-    "get_dbm_brotli_stash": ("dbm", "brotli", True),
-    "get_dbm_lzma_stash": ("dbm", "lzma", True),
-    "get_dbm_stash": ("dbm", "passthru", True),
-    "get_dbm_zlib_stash": ("dbm", "zlib", True),
-    "get_dbm_zstd_stash": ("dbm", "zstd", True),
-    "get_fs_brotli_stash": ("filesystem", "brotli", True),
-    "get_fs_lzma_stash": ("filesystem", "lzma", True),
-    "get_fs_stash": ("filesystem", None, True),
-    "get_fs_zlib_stash": ("filesystem", "zlib", True),
-    "get_fs_zstd_stash": ("filesystem", "zstd", True),
-    "get_leveldb_brotli_stash": ("leveldb", "brotli", True),
-    "get_leveldb_lzma_stash": ("leveldb", "lzma", True),
-    "get_leveldb_stash": ("leveldb", "passthru", True),
-    "get_leveldb_zlib_stash": ("leveldb", "zlib", True),
-    "get_leveldb_zstd_stash": ("leveldb", "zstd", True),
-    "get_lmdb_brotli_stash": ("lmdb", "brotli", True),
-    "get_lmdb_lzma_stash": ("lmdb", "lzma", True),
-    "get_lmdb_stash": ("lmdb", "passthru", True),
-    "get_lmdb_zlib_stash": ("lmdb", "zlib", True),
-    "get_lmdb_zstd_stash": ("lmdb", "zstd", True),
-    "get_lsmdb_brotli_stash": ("lsmdb", "brotli", True),
-    "get_lsmdb_lzma_stash": ("lsmdb", "lzma", True),
-    "get_lsmdb_stash": ("lsmdb", "passthru", True),
-    "get_lsmdb_zlib_stash": ("lsmdb", "zlib", True),
-    "get_lsmdb_zstd_stash": ("lsmdb", "zstd", True),
-    "get_mongo_zlib_stash": ("mongodb", "zlib", True),
-    "get_null_stash": ("null", "passthru", False),
+    "get_dbm_brotli_stash": (StorageName.DBM, CodecName.BROTLI, True),
+    "get_dbm_lzma_stash": (StorageName.DBM, CodecName.LZMA, True),
+    "get_dbm_stash": (StorageName.DBM, CodecName.PASSTHRU, True),
+    "get_dbm_zlib_stash": (StorageName.DBM, CodecName.ZLIB, True),
+    "get_dbm_zstd_stash": (StorageName.DBM, CodecName.ZSTD, True),
+    "get_fs_brotli_stash": (StorageName.FILESYSTEM, CodecName.BROTLI, True),
+    "get_fs_lzma_stash": (StorageName.FILESYSTEM, CodecName.LZMA, True),
+    "get_fs_stash": (StorageName.FILESYSTEM, None, True),
+    "get_fs_zlib_stash": (StorageName.FILESYSTEM, CodecName.ZLIB, True),
+    "get_fs_zstd_stash": (StorageName.FILESYSTEM, CodecName.ZSTD, True),
+    "get_leveldb_brotli_stash": (StorageName.LEVELDB, CodecName.BROTLI, True),
+    "get_leveldb_lzma_stash": (StorageName.LEVELDB, CodecName.LZMA, True),
+    "get_leveldb_stash": (StorageName.LEVELDB, CodecName.PASSTHRU, True),
+    "get_leveldb_zlib_stash": (StorageName.LEVELDB, CodecName.ZLIB, True),
+    "get_leveldb_zstd_stash": (StorageName.LEVELDB, CodecName.ZSTD, True),
+    "get_lmdb_brotli_stash": (StorageName.LMDB, CodecName.BROTLI, True),
+    "get_lmdb_lzma_stash": (StorageName.LMDB, CodecName.LZMA, True),
+    "get_lmdb_stash": (StorageName.LMDB, CodecName.PASSTHRU, True),
+    "get_lmdb_zlib_stash": (StorageName.LMDB, CodecName.ZLIB, True),
+    "get_lmdb_zstd_stash": (StorageName.LMDB, CodecName.ZSTD, True),
+    "get_lsmdb_brotli_stash": (StorageName.LSMDB, CodecName.BROTLI, True),
+    "get_lsmdb_lzma_stash": (StorageName.LSMDB, CodecName.LZMA, True),
+    "get_lsmdb_stash": (StorageName.LSMDB, CodecName.PASSTHRU, True),
+    "get_lsmdb_zlib_stash": (StorageName.LSMDB, CodecName.ZLIB, True),
+    "get_lsmdb_zstd_stash": (StorageName.LSMDB, CodecName.ZSTD, True),
+    "get_mongo_zlib_stash": (StorageName.MONGODB, CodecName.ZLIB, True),
+    "get_null_stash": (StorageName.NULL, CodecName.PASSTHRU, False),
 }
 
 
@@ -140,29 +178,58 @@ def _load_serializer_constructor(
     return cast(SerializerConstructor[Serializer], getattr(module, class_name))
 
 
-def _normalize_storage_name(storage_name: str) -> str:
+def _normalize_storage_name(storage_name: StorageNameInput) -> StorageName:
+    if isinstance(storage_name, StorageName):
+        return storage_name
+
     normalized = storage_name.strip().lower()
-    return _STORAGE_ALIASES.get(normalized, normalized)
+    if normalized in _STORAGE_ALIASES:
+        return _STORAGE_ALIASES[normalized]
+
+    try:
+        return StorageName(normalized)
+    except ValueError as exc:
+        raise ValueError("Unknown storage backend: {}".format(storage_name)) from exc
 
 
-def _normalize_codec_name(codec_name: Optional[str]) -> Optional[str]:
+def _normalize_codec_name(codec_name: Optional[CodecNameInput]) -> Optional[CodecName]:
     if codec_name is None:
         return None
+
+    if isinstance(codec_name, CodecName):
+        return codec_name
 
     normalized = codec_name.strip().lower()
     if normalized == "none":
         return None
-    return _CODEC_ALIASES.get(normalized, normalized)
+    if normalized in _CODEC_ALIASES:
+        return _CODEC_ALIASES[normalized]
+
+    try:
+        return CodecName(normalized)
+    except ValueError as exc:
+        raise ValueError("Unknown codec: {}".format(codec_name)) from exc
 
 
-def _normalize_serializer_name(serializer_name: Optional[str]) -> Optional[str]:
+def _normalize_serializer_name(
+    serializer_name: Optional[SerializerNameInput],
+) -> Optional[SerializerName]:
     if serializer_name is None:
         return None
+
+    if isinstance(serializer_name, SerializerName):
+        return serializer_name
 
     normalized = serializer_name.strip().lower()
     if normalized == "none":
         return None
-    return _SERIALIZER_ALIASES.get(normalized, normalized)
+    if normalized in _SERIALIZER_ALIASES:
+        return _SERIALIZER_ALIASES[normalized]
+
+    try:
+        return SerializerName(normalized)
+    except ValueError as exc:
+        raise ValueError("Unknown serializer: {}".format(serializer_name)) from exc
 
 
 def _init_cache(
@@ -171,7 +238,7 @@ def _init_cache(
     options: StashOptions,
     serializer: Optional[Serializer] = None,
 ) -> StashManager:
-    manager_codec = codec or _create_codec("passthru")
+    manager_codec = codec or _create_codec(CodecName.PASSTHRU)
     cache_man = StashManager(
         storage=storage,
         codec=manager_codec,
@@ -181,47 +248,40 @@ def _init_cache(
     return cache_man
 
 
-def _create_storage(storage_name: str, options: StashOptions) -> Storage:
+def _create_storage(storage_name: StorageNameInput, options: StashOptions) -> Storage:
     normalized_name = _normalize_storage_name(storage_name)
-    spec = _STORAGE_REGISTRY.get(normalized_name)
-    if spec is None:
-        raise ValueError("Unknown storage backend: {}".format(storage_name))
-
+    spec = _STORAGE_REGISTRY[normalized_name]
     storage_class = _load_storage_constructor(spec)
     return storage_class(options=options)
 
 
-def _create_codec(codec_name: Optional[str]) -> Optional[Codec]:
+def _create_codec(codec_name: Optional[CodecNameInput]) -> Optional[Codec]:
     normalized_name = _normalize_codec_name(codec_name)
     if normalized_name is None:
         return None
 
-    spec = _CODEC_REGISTRY.get(normalized_name)
-    if spec is None:
-        raise ValueError("Unknown codec: {}".format(codec_name))
-
+    spec = _CODEC_REGISTRY[normalized_name]
     codec_class = _load_codec_constructor(spec)
     return codec_class()
 
 
-def _create_serializer(serializer_name: Optional[str]) -> Optional[Serializer]:
+def _create_serializer(
+    serializer_name: Optional[SerializerNameInput],
+) -> Optional[Serializer]:
     normalized_name = _normalize_serializer_name(serializer_name)
     if normalized_name is None:
         return None
 
-    spec = _SERIALIZER_REGISTRY.get(normalized_name)
-    if spec is None:
-        raise ValueError("Unknown serializer: {}".format(serializer_name))
-
+    spec = _SERIALIZER_REGISTRY[normalized_name]
     serializer_class = _load_serializer_constructor(spec)
     return serializer_class()
 
 
 def get_stash(
-    storage_name: str,
+    storage_name: StorageNameInput,
     options: Optional[StashOptions] = None,
-    codec_name: Optional[str] = None,
-    serializer_name: Optional[str] = None,
+    codec_name: Optional[CodecNameInput] = None,
+    serializer_name: Optional[SerializerNameInput] = None,
 ) -> StashManager:
     options = options or StashOptions()
     storage = _create_storage(storage_name, options)
@@ -236,8 +296,8 @@ def get_stash(
 
 
 def _make_compat_helper(
-    storage_name: str,
-    codec_name: Optional[str],
+    storage_name: StorageName,
+    codec_name: Optional[CodecName],
     expects_options: bool,
 ) -> Callable[..., StashManager]:
     if expects_options:
@@ -277,7 +337,7 @@ def stashify(stash: Optional[StashManager] = None):
     def decorator(function):
         stash = stash_
         if stash is None:
-            stash = get_stash("filesystem", StashOptions())
+            stash = get_stash(StorageName.FILESYSTEM, StashOptions())
 
         @functools.wraps(function)
         def func(*args, **kwargs):
@@ -294,36 +354,39 @@ def stashify(stash: Optional[StashManager] = None):
     return decorator
 
 
-get_dbm_brotli_stash = _make_compat_helper("dbm", "brotli", True)
-get_dbm_lzma_stash = _make_compat_helper("dbm", "lzma", True)
-get_dbm_stash = _make_compat_helper("dbm", "passthru", True)
-get_dbm_zlib_stash = _make_compat_helper("dbm", "zlib", True)
-get_dbm_zstd_stash = _make_compat_helper("dbm", "zstd", True)
-get_fs_brotli_stash = _make_compat_helper("filesystem", "brotli", True)
-get_fs_lzma_stash = _make_compat_helper("filesystem", "lzma", True)
-get_fs_stash = _make_compat_helper("filesystem", None, True)
-get_fs_zlib_stash = _make_compat_helper("filesystem", "zlib", True)
-get_fs_zstd_stash = _make_compat_helper("filesystem", "zstd", True)
-get_leveldb_brotli_stash = _make_compat_helper("leveldb", "brotli", True)
-get_leveldb_lzma_stash = _make_compat_helper("leveldb", "lzma", True)
-get_leveldb_stash = _make_compat_helper("leveldb", "passthru", True)
-get_leveldb_zlib_stash = _make_compat_helper("leveldb", "zlib", True)
-get_leveldb_zstd_stash = _make_compat_helper("leveldb", "zstd", True)
-get_lmdb_brotli_stash = _make_compat_helper("lmdb", "brotli", True)
-get_lmdb_lzma_stash = _make_compat_helper("lmdb", "lzma", True)
-get_lmdb_stash = _make_compat_helper("lmdb", "passthru", True)
-get_lmdb_zlib_stash = _make_compat_helper("lmdb", "zlib", True)
-get_lmdb_zstd_stash = _make_compat_helper("lmdb", "zstd", True)
-get_lsmdb_brotli_stash = _make_compat_helper("lsmdb", "brotli", True)
-get_lsmdb_lzma_stash = _make_compat_helper("lsmdb", "lzma", True)
-get_lsmdb_stash = _make_compat_helper("lsmdb", "passthru", True)
-get_lsmdb_zlib_stash = _make_compat_helper("lsmdb", "zlib", True)
-get_lsmdb_zstd_stash = _make_compat_helper("lsmdb", "zstd", True)
-get_mongo_zlib_stash = _make_compat_helper("mongodb", "zlib", True)
-get_null_stash = _make_compat_helper("null", "passthru", False)
+get_dbm_brotli_stash = _make_compat_helper(StorageName.DBM, CodecName.BROTLI, True)
+get_dbm_lzma_stash = _make_compat_helper(StorageName.DBM, CodecName.LZMA, True)
+get_dbm_stash = _make_compat_helper(StorageName.DBM, CodecName.PASSTHRU, True)
+get_dbm_zlib_stash = _make_compat_helper(StorageName.DBM, CodecName.ZLIB, True)
+get_dbm_zstd_stash = _make_compat_helper(StorageName.DBM, CodecName.ZSTD, True)
+get_fs_brotli_stash = _make_compat_helper(StorageName.FILESYSTEM, CodecName.BROTLI, True)
+get_fs_lzma_stash = _make_compat_helper(StorageName.FILESYSTEM, CodecName.LZMA, True)
+get_fs_stash = _make_compat_helper(StorageName.FILESYSTEM, None, True)
+get_fs_zlib_stash = _make_compat_helper(StorageName.FILESYSTEM, CodecName.ZLIB, True)
+get_fs_zstd_stash = _make_compat_helper(StorageName.FILESYSTEM, CodecName.ZSTD, True)
+get_leveldb_brotli_stash = _make_compat_helper(StorageName.LEVELDB, CodecName.BROTLI, True)
+get_leveldb_lzma_stash = _make_compat_helper(StorageName.LEVELDB, CodecName.LZMA, True)
+get_leveldb_stash = _make_compat_helper(StorageName.LEVELDB, CodecName.PASSTHRU, True)
+get_leveldb_zlib_stash = _make_compat_helper(StorageName.LEVELDB, CodecName.ZLIB, True)
+get_leveldb_zstd_stash = _make_compat_helper(StorageName.LEVELDB, CodecName.ZSTD, True)
+get_lmdb_brotli_stash = _make_compat_helper(StorageName.LMDB, CodecName.BROTLI, True)
+get_lmdb_lzma_stash = _make_compat_helper(StorageName.LMDB, CodecName.LZMA, True)
+get_lmdb_stash = _make_compat_helper(StorageName.LMDB, CodecName.PASSTHRU, True)
+get_lmdb_zlib_stash = _make_compat_helper(StorageName.LMDB, CodecName.ZLIB, True)
+get_lmdb_zstd_stash = _make_compat_helper(StorageName.LMDB, CodecName.ZSTD, True)
+get_lsmdb_brotli_stash = _make_compat_helper(StorageName.LSMDB, CodecName.BROTLI, True)
+get_lsmdb_lzma_stash = _make_compat_helper(StorageName.LSMDB, CodecName.LZMA, True)
+get_lsmdb_stash = _make_compat_helper(StorageName.LSMDB, CodecName.PASSTHRU, True)
+get_lsmdb_zlib_stash = _make_compat_helper(StorageName.LSMDB, CodecName.ZLIB, True)
+get_lsmdb_zstd_stash = _make_compat_helper(StorageName.LSMDB, CodecName.ZSTD, True)
+get_mongo_zlib_stash = _make_compat_helper(StorageName.MONGODB, CodecName.ZLIB, True)
+get_null_stash = _make_compat_helper(StorageName.NULL, CodecName.PASSTHRU, False)
 
 
 __all__ = [
+    "CodecName",
+    "SerializerName",
+    "StorageName",
     "get_stash",
     "size_gb",
     "size_kb",
