@@ -1,20 +1,24 @@
 from stash.codecs.passthru import PassthruCodec
 from stash.manager import StashManager
 from stash.options import StashOptions
+from stash.serializers.serializer import Serializer
 from stash.storages.memory import MemoryStorage
+from typing import Any
 
 
-class TrackingSerializer:
+class TrackingSerializer(Serializer):
     def __init__(self):
         self.serialize_calls = 0
         self.deserialize_calls = 0
 
-    def serialize(self, data):
+    def serialize(self, data: Any) -> bytes | str:
         self.serialize_calls += 1
         return f"serialized:{data}".encode("utf-8")
 
-    def deserialize(self, data):
+    def deserialize(self, data: bytes | str) -> Any:
         self.deserialize_calls += 1
+        if isinstance(data, str):
+            data = data.encode("utf-8")
         return data.decode("utf-8").replace("serialized:", "", 1)
 
 

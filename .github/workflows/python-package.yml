@@ -37,6 +37,9 @@ jobs:
     - name: Run tests with pytest
       run: |
         pytest -q
+    - name: Type-check with mypy
+      run: |
+        mypy
     - name: Build package
       run: |
         python -m build
