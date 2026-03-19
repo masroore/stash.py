@@ -1,8 +1,9 @@
 import functools
 import hashlib
 from importlib import import_module
-from typing import Any, Callable, Dict, Optional, Tuple
+from typing import Callable, Dict, Optional, Protocol, Tuple, TypeVar, cast
 
+from stash.codecs.codec import Codec
 from stash.consts import SIZE_KB, SIZE_MB, SIZE_GB
 from stash.manager import StashManager
 from stash.options import StashOptions
@@ -13,6 +14,23 @@ from stash.storages.storage import Storage
 StorageSpec = Tuple[str, str]
 CodecSpec = Tuple[str, str]
 SerializerSpec = Tuple[str, str]
+CompatHelperSpec = Tuple[str, Optional[str], bool]
+
+StorageT = TypeVar("StorageT", bound=Storage, covariant=True)
+CodecT = TypeVar("CodecT", bound=Codec, covariant=True)
+SerializerT = TypeVar("SerializerT", bound=Serializer, covariant=True)
+
+
+class StorageConstructor(Protocol[StorageT]):
+    def __call__(self, *, options: StashOptions) -> StorageT: ...
+
+
+class ComponentConstructor(Protocol[CodecT]):
+    def __call__(self) -> CodecT: ...
+
+
+class SerializerConstructor(Protocol[SerializerT]):
+    def __call__(self) -> SerializerT: ...
 
 _STORAGE_REGISTRY: Dict[str, StorageSpec] = {
     "dbm": ("stash.storages.dbm_", "DbmStorage"),
@@ -59,7 +77,7 @@ _SERIALIZER_ALIASES = {
     "pickle": "default",
 }
 
-_COMPAT_HELPERS = {
+_COMPAT_HELPERS: Dict[str, CompatHelperSpec] = {
     "get_dbm_brotli_stash": ("dbm", "brotli", True),
     "get_dbm_lzma_stash": ("dbm", "lzma", True),
     "get_dbm_stash": ("dbm", "passthru", True),
@@ -102,10 +120,24 @@ def size_gb(n: int) -> int:
     return SIZE_GB * n
 
 
-def _load_component(spec: Tuple[str, str]) -> Any:
+def _load_storage_constructor(spec: StorageSpec) -> StorageConstructor[Storage]:
     module_name, class_name = spec
     module = import_module(module_name)
-    return getattr(module, class_name)
+    return cast(StorageConstructor[Storage], getattr(module, class_name))
+
+
+def _load_codec_constructor(spec: CodecSpec) -> ComponentConstructor[Codec]:
+    module_name, class_name = spec
+    module = import_module(module_name)
+    return cast(ComponentConstructor[Codec], getattr(module, class_name))
+
+
+def _load_serializer_constructor(
+    spec: SerializerSpec,
+) -> SerializerConstructor[Serializer]:
+    module_name, class_name = spec
+    module = import_module(module_name)
+    return cast(SerializerConstructor[Serializer], getattr(module, class_name))
 
 
 def _normalize_storage_name(storage_name: str) -> str:
@@ -135,13 +167,14 @@ def _normalize_serializer_name(serializer_name: Optional[str]) -> Optional[str]:
 
 def _init_cache(
     storage: Storage,
-    codec,
+    codec: Optional[Codec],
     options: StashOptions,
     serializer: Optional[Serializer] = None,
 ) -> StashManager:
+    manager_codec = codec or _create_codec("passthru")
     cache_man = StashManager(
         storage=storage,
-        codec=codec,
+        codec=manager_codec,
         options=options,
         serializer=serializer,
     )
@@ -154,11 +187,11 @@ def _create_storage(storage_name: str, options: StashOptions) -> Storage:
     if spec is None:
         raise ValueError("Unknown storage backend: {}".format(storage_name))
 
-    storage_class = _load_component(spec)
+    storage_class = _load_storage_constructor(spec)
     return storage_class(options=options)
 
 
-def _create_codec(codec_name: Optional[str]):
+def _create_codec(codec_name: Optional[str]) -> Optional[Codec]:
     normalized_name = _normalize_codec_name(codec_name)
     if normalized_name is None:
         return None
@@ -167,7 +200,7 @@ def _create_codec(codec_name: Optional[str]):
     if spec is None:
         raise ValueError("Unknown codec: {}".format(codec_name))
 
-    codec_class = _load_component(spec)
+    codec_class = _load_codec_constructor(spec)
     return codec_class()
 
 
@@ -180,7 +213,7 @@ def _create_serializer(serializer_name: Optional[str]) -> Optional[Serializer]:
     if spec is None:
         raise ValueError("Unknown serializer: {}".format(serializer_name))
 
-    serializer_class = _load_component(spec)
+    serializer_class = _load_serializer_constructor(spec)
     return serializer_class()
 
 
@@ -228,7 +261,11 @@ def _make_compat_helper(
     return helper_without_options
 
 
-def _make_stashify_key(function: Callable[..., Any], args, kwargs) -> str:
+def _make_stashify_key(
+    function: Callable[..., object],
+    args: tuple[object, ...],
+    kwargs: dict[str, object],
+) -> str:
     kwargs_items = tuple(sorted(kwargs.items()))
     payload = (function.__module__, function.__qualname__, args, kwargs_items)
     return hashlib.sha256(repr(payload).encode("utf-8")).hexdigest()
