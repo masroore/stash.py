@@ -46,3 +46,21 @@ def test_manager_read_missing_returns_none():
     )
 
     assert manager.read("missing") is None
+
+
+class CloseTrackingStorage(MemoryStorage):
+    def __init__(self, options):
+        super().__init__(options)
+        self.closed = False
+
+    def close(self):
+        self.closed = True
+
+
+def test_manager_context_manager_closes_storage():
+    storage = CloseTrackingStorage(_options())
+
+    with StashManager(storage=storage, codec=PassthruCodec(), options=_options()) as manager:
+        manager.write("k", "v")
+
+    assert storage.closed is True
