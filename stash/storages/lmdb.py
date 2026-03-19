@@ -21,13 +21,9 @@ class LmdbStorage(Storage):
         )
 
     def exists(self, key: str) -> bool:
-        key = key.encode("utf-8")
+        key = self.normalize_string(key)
         with self._env.begin(db=self._db) as txn:
-            for k, _ in txn.cursor():
-                if k == key:
-                    return True
-
-        return False
+            return txn.get(key) is not None
 
     def purge(self, cutoff: int):
         pass
@@ -51,7 +47,7 @@ class LmdbStorage(Storage):
     def read(self, key: str):
         key = self.normalize_string(key)
         with self._env.begin(db=self._db) as txn:
-            return bytes(txn.get(key))
+            return txn.get(key)
 
     def rm(self, key: str):
         key = self.normalize_string(key)
