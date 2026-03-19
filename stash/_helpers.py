@@ -6,10 +6,13 @@ from typing import Any, Callable, Dict, Optional, Tuple
 from stash.consts import SIZE_KB, SIZE_MB, SIZE_GB
 from stash.manager import StashManager
 from stash.options import StashOptions
+from stash.serializers.serializer import Serializer
+from stash.storages.storage import Storage
 
 
 StorageSpec = Tuple[str, str]
 CodecSpec = Tuple[str, str]
+SerializerSpec = Tuple[str, str]
 
 _STORAGE_REGISTRY: Dict[str, StorageSpec] = {
     "dbm": ("stash.storages.dbm_", "DbmStorage"),
@@ -38,6 +41,22 @@ _CODEC_REGISTRY: Dict[str, CodecSpec] = {
 
 _CODEC_ALIASES = {
     "passthrough": "passthru",
+}
+
+_SERIALIZER_REGISTRY: Dict[str, SerializerSpec] = {
+    "bson": ("stash.serializers.bson", "BSONSerializer"),
+    "cbor": ("stash.serializers.cbor", "CBORSerializer"),
+    "default": ("stash.serializers.default", "DefaultSerializer"),
+    "json": ("stash.serializers.json", "JSONSerializer"),
+    "msgpack": ("stash.serializers.msgpack", "MsgPackSerializer"),
+    "orjson": ("stash.serializers.orjson", "OrJSONSerializer"),
+    "rapidjson": ("stash.serializers.rapidjson", "RapidJSONSerializer"),
+    "simplejson": ("stash.serializers.simplejson", "SimpleJSONSerializer"),
+    "ujson": ("stash.serializers.ujson", "UltraJSONSerializer"),
+}
+
+_SERIALIZER_ALIASES = {
+    "pickle": "default",
 }
 
 _COMPAT_HELPERS = {
@@ -104,12 +123,32 @@ def _normalize_codec_name(codec_name: Optional[str]) -> Optional[str]:
     return _CODEC_ALIASES.get(normalized, normalized)
 
 
-def _init_cache(storage, codec, options: StashOptions) -> StashManager:
-    cache_man = StashManager(storage=storage, codec=codec, options=options)
+def _normalize_serializer_name(serializer_name: Optional[str]) -> Optional[str]:
+    if serializer_name is None:
+        return None
+
+    normalized = serializer_name.strip().lower()
+    if normalized == "none":
+        return None
+    return _SERIALIZER_ALIASES.get(normalized, normalized)
+
+
+def _init_cache(
+    storage: Storage,
+    codec,
+    options: StashOptions,
+    serializer: Optional[Serializer] = None,
+) -> StashManager:
+    cache_man = StashManager(
+        storage=storage,
+        codec=codec,
+        options=options,
+        serializer=serializer,
+    )
     return cache_man
 
 
-def _create_storage(storage_name: str, options: StashOptions):
+def _create_storage(storage_name: str, options: StashOptions) -> Storage:
     normalized_name = _normalize_storage_name(storage_name)
     spec = _STORAGE_REGISTRY.get(normalized_name)
     if spec is None:
@@ -132,15 +171,35 @@ def _create_codec(codec_name: Optional[str]):
     return codec_class()
 
 
+def _create_serializer(serializer_name: Optional[str]) -> Optional[Serializer]:
+    normalized_name = _normalize_serializer_name(serializer_name)
+    if normalized_name is None:
+        return None
+
+    spec = _SERIALIZER_REGISTRY.get(normalized_name)
+    if spec is None:
+        raise ValueError("Unknown serializer: {}".format(serializer_name))
+
+    serializer_class = _load_component(spec)
+    return serializer_class()
+
+
 def get_stash(
     storage_name: str,
     options: Optional[StashOptions] = None,
     codec_name: Optional[str] = None,
+    serializer_name: Optional[str] = None,
 ) -> StashManager:
     options = options or StashOptions()
     storage = _create_storage(storage_name, options)
     codec = _create_codec(codec_name)
-    return _init_cache(storage=storage, codec=codec, options=options)
+    serializer = _create_serializer(serializer_name)
+    return _init_cache(
+        storage=storage,
+        codec=codec,
+        options=options,
+        serializer=serializer,
+    )
 
 
 def _make_compat_helper(

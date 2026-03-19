@@ -39,6 +39,22 @@ stash.write("greeting", {"message": "hello"})
 assert stash.read("greeting") == {"message": "hello"}
 ```
 
+Use the generic factory when you want to choose storage, codec, and serializer explicitly:
+
+```python
+from stash import StashOptions, get_stash
+
+stash = get_stash(
+    storage_name="memory",
+    options=StashOptions({"algo": "md5"}),
+    codec_name="passthru",
+    serializer_name="json",
+)
+stash.write("greeting", {"message": "hello"})
+
+assert stash.read("greeting") == {"message": "hello"}
+```
+
 Use a context manager to ensure resources are closed for storages that keep handles open:
 
 ```python

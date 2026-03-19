@@ -20,6 +20,19 @@ def test_get_stash_supports_memory_backend():
     assert stash.read("hello") == b"world"
 
 
+def test_get_stash_supports_serializer_selection():
+    stash = helpers.get_stash(
+        "memory",
+        StashOptions({"algo": "md5"}),
+        "passthru",
+        "json",
+    )
+
+    stash.write("hello", {"message": "world"})
+
+    assert stash.read("hello") == {"message": "world"}
+
+
 def test_compatibility_wrapper_still_builds_filesystem_stash(tmp_path):
     stash = helpers.get_fs_stash(_filesystem_options(tmp_path))
 
@@ -35,6 +48,20 @@ def test_get_stash_rejects_unknown_storage():
         assert str(exc) == "Unknown storage backend: missing-backend"
     else:
         raise AssertionError("Expected ValueError for unknown storage backend")
+
+
+def test_get_stash_rejects_unknown_serializer():
+    try:
+        helpers.get_stash(
+            "memory",
+            StashOptions({"algo": "md5"}),
+            "passthru",
+            "missing-serializer",
+        )
+    except ValueError as exc:
+        assert str(exc) == "Unknown serializer: missing-serializer"
+    else:
+        raise AssertionError("Expected ValueError for unknown serializer")
 
 
 def test_stashify_uses_kwargs_in_cache_key():
