@@ -15,22 +15,31 @@ class StashManager(object):
         storage: Storage,
         codec: Codec,
         options: StashOptions,
-        serializer: Serializer = DefaultSerializer(),
+        serializer: Serializer = None,
     ):
         self.__storage = storage
         self.__codec = codec
         self.__options = options
-        self.__serializer = serializer
+        self.__serializer = serializer or DefaultSerializer()
 
     def __get_cache_key(self, data):
         return calcsum(data, self.__options.algo)
 
     def __encode(self, data):
+        data = self.__serializer.serialize(data) if self.__serializer else data
         data = to_bytes(data)
         return self.__codec.encode(data) if self.__codec else data
 
     def __decode(self, data):
-        return self.__codec.decode(data) if self.__codec else data
+        data = self.__codec.decode(data) if self.__codec else data
+        return self.__serializer.deserialize(data) if self.__serializer else data
+
+    def __enter__(self):
+        return self
+
+    def __exit__(self, exc_type, exc_value, traceback):
+        self.close()
+        return False
 
     def exists(self, key: str) -> bool:
         return self.__storage.exists(self.__get_cache_key(key))
@@ -50,7 +59,7 @@ class StashManager(object):
 
     def read(self, key: str):
         data = self.__storage.read(self.__get_cache_key(key))
-        if data:
+        if data is not None:
             return self.__decode(data)
         return None
 
