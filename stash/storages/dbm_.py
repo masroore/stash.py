@@ -8,6 +8,7 @@ from stash.storages.storage import Storage
 class DbmStorage(Storage):
     def __init__(self, options: StashOptions):
         super().__init__(options)
+        os.makedirs(self.options.fs_cache_dir, exist_ok=True)
         dbpath = os.path.join(self.options.fs_cache_dir, options.dbm_filename)
         self.__db = dbm.open(dbpath, "c")
 
