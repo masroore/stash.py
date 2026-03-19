@@ -55,6 +55,22 @@ stash.write("greeting", {"message": "hello"})
 assert stash.read("greeting") == {"message": "hello"}
 ```
 
+For stricter identifier validation, use enum names instead of raw strings:
+
+```python
+from stash import CodecName, SerializerName, StashOptions, StorageName, get_stash
+
+stash = get_stash(
+    storage_name=StorageName.MEMORY,
+    options=StashOptions({"algo": "md5"}),
+    codec_name=CodecName.PASSTHRU,
+    serializer_name=SerializerName.JSON,
+)
+stash.write("typed", {"ok": True})
+
+assert stash.read("typed") == {"ok": True}
+```
+
 Use a context manager to ensure resources are closed for storages that keep handles open:
 
 ```python
