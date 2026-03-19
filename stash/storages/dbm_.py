@@ -11,15 +11,14 @@ class DbmStorage(Storage):
         dbpath = os.path.join(self.options.fs_cache_dir, options.dbm_filename)
         self.__db = dbm.open(dbpath, "c")
 
-    def _data_key(self, key: str) -> str:
-        return f"{key.strip()}^@d"
+    def _data_key(self, key: str) -> bytes:
+        return f"{key.strip()}^@d".encode("utf-8")
 
-    def _meta_key(self, key: str) -> str:
-        return f"{key.strip()}^@m"
+    def _meta_key(self, key: str) -> bytes:
+        return f"{key.strip()}^@m".encode("utf-8")
 
     def exists(self, key: str) -> bool:
-        # if self._meta_key(key) not in self.__db.keys(): return False
-        return self._data_key(key) in self.__db.keys()
+        return self._data_key(key) in self.__db
 
     def purge(self, cutoff: int):
         pass
