@@ -24,7 +24,6 @@ from stash.serializers.msgpack import MsgPackSerializer
 from stash.serializers.orjson import OrJSONSerializer
 from stash.serializers.rapidjson import RapidJSONSerializer
 from stash.serializers.serializer import Serializer
-from stash.serializers.serializer import Serializer
 from stash.serializers.simplejson import SimpleJSONSerializer
 from stash.serializers.ujson import UltraJSONSerializer
 from stash.storages.dbm_ import DbmStorage
@@ -38,7 +37,7 @@ from stash.storages.null import NullStorage
 from stash.storages.redis import RedisStorage
 from stash.storages.storage import Storage
 
-__name__: str = consts.PROJECT
+__title__: str = consts.PROJECT
 __author__: str = "Masroor Ehsan"
 __email__: str = "masroore@gmail.com"
 __version__: str = ".".join(map(str, consts.VERSION))
